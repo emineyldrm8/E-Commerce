@@ -1,6 +1,8 @@
 
 package com.haratres.ecommerce.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GeneralExceptionHandler {
+    private static final Logger logger = LoggerFactory.getLogger(GeneralExceptionHandler.class);
 
     @ExceptionHandler(NotFoundExc.class)
     public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundExc ex) {
@@ -16,6 +19,7 @@ public class GeneralExceptionHandler {
                 HttpStatus.NOT_FOUND.value(),
                 ex.getMessage()
         );
+        logger.error("NotFoundException occurred: {}", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
@@ -25,6 +29,7 @@ public class GeneralExceptionHandler {
                 HttpStatus.CONFLICT.value(),
                 ex.getMessage()
         );
+        logger.error("DuplicateEntryException occurred: {}", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
@@ -34,6 +39,7 @@ public class GeneralExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage()
         );
+        logger.error("InvalidRoleException occurred: {}", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }
