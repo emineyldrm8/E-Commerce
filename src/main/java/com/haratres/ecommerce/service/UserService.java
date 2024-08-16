@@ -6,6 +6,7 @@ import com.haratres.ecommerce.exception.DuplicateEntryException;
 import com.haratres.ecommerce.exception.InvalidRoleException;
 import com.haratres.ecommerce.exception.NotFoundException;
 import com.haratres.ecommerce.mapper.UserMapper;
+import com.haratres.ecommerce.model.Role;
 import com.haratres.ecommerce.model.User;
 import com.haratres.ecommerce.repository.RoleRepository;
 import com.haratres.ecommerce.repository.UserRepository;
@@ -18,26 +19,27 @@ import java.util.Objects;
 
 @Service
 public class UserService {
-    private static Logger logger= LoggerFactory.getLogger(UserService.class);
+    private static Logger logger = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
     private final RoleService roleService;
     private final UserMapper userMapper = UserMapper.INSTANCE;
 
-    public UserService(UserRepository userRepository,RoleService roleService) {
+    public UserService(UserRepository userRepository, RoleService roleService) {
         this.userRepository = userRepository;
-        this.roleService=roleService;
+        this.roleService = roleService;
     }
 
     public UserRegisterDto saveUser(UserRegisterDto userRegisterDto) {
         User user = userMapper.toEntity(userRegisterDto);
-        if (Objects.isNull(roleService.getByRoleName(user.getRole().getRoleName()))) {
+        Role role = roleService.getByRoleName(user.getRole().getRoleName());
+        if (Objects.isNull(role)) {
             logger.error("Invalid role: {}. Roll must be USER or ADMIN. Error registering user: {}", user.getRole().getRoleName(), userRegisterDto.getUsername());
             throw new InvalidRoleException("Invalid role. Role must be USER or ADMIN.");
         }
         try {
-            user.setRole(roleService.getByRoleName(user.getRole().getRoleName()));
+            user.setRole(role);
             User savedUser = userRepository.save(user);
-            logger.info("{} registered successfully.",userRegisterDto.getUsername());
+            logger.info("{} registered successfully.", userRegisterDto.getUsername());
             return userMapper.toRegisterDTO(savedUser);
         } catch (DataIntegrityViolationException e) {
             logger.error("Error registering user: {}. User with the same username, email, or phone already exists.", userRegisterDto.getUsername());
@@ -48,7 +50,7 @@ public class UserService {
     public UserLoginDto getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
-        logger.info("User found with username {}",username);
+        logger.info("User found with username {}", username);
         return userMapper.toLoginDTO(user);
     }
 }

@@ -14,8 +14,6 @@ import java.util.Date;
 @Getter
 @Setter
 public abstract class BaseEntity implements Serializable {
-    private String createdBy;
-    private String updatedBy;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

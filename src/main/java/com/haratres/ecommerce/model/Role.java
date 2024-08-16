@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.List;
 
-import java.util.Set;
 
 @Entity
 @Table(name = "Role")
@@ -24,7 +24,7 @@ public class Role extends BaseEntity{
     private String roleName;
 
     @OneToMany(mappedBy = "role")
-    private Set<User> users;
+    private List<User> users;
 
     public Role(String roleName) {
         this.roleName = roleName;

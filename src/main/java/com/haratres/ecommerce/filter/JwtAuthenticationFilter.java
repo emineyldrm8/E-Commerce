@@ -1,5 +1,6 @@
 package com.haratres.ecommerce.filter;
 
+import com.haratres.ecommerce.config.ApplicationConstants;
 import com.haratres.ecommerce.service.JwtService;
 import com.haratres.ecommerce.service.UserDetailsImpl;
 import jakarta.servlet.FilterChain;
@@ -30,15 +31,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        String authHeader = request.getHeader("Authorization");
-        if (Objects.isNull(authHeader) || !authHeader.startsWith("Bearer")) {
+        String authHeader = request.getHeader(ApplicationConstants.AUTHORIZATION_HEADER);
+        if (Objects.isNull(authHeader) || !authHeader.startsWith(ApplicationConstants.TOKEN_PREFIX)) {
             filterChain.doFilter(request, response);
             return;
         }
         String token = authHeader.substring(7);
         String username = jwtService.extractUsername(token);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!Objects.isNull(username) && Objects.isNull(SecurityContextHolder.getContext().getAuthentication())) {
+        if (Objects.nonNull(username) && Objects.isNull(SecurityContextHolder.getContext().getAuthentication())) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             if (jwtService.isTokenValid(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

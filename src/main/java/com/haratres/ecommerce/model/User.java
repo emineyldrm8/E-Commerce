@@ -20,7 +20,7 @@ public class User extends BaseEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Integer id;
+    private Long id;
 
     @NotBlank(message = "Firstname can not be null")
     @Column(name = "firstname")
