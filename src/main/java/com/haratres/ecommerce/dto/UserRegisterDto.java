@@ -1,5 +1,6 @@
 package com.haratres.ecommerce.dto;
 
+import com.haratres.ecommerce.model.Role;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.Getter;
@@ -34,5 +35,5 @@ public class UserRegisterDto {
     private String email;
 
     @NotNull(message = "Role can not be null")
-    private String role;
+    private Role role;
 }

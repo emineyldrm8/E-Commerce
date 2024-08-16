@@ -13,14 +13,10 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
-@Table(name = "Users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "username"),
-        @UniqueConstraint(columnNames = "email"),
-        @UniqueConstraint(columnNames = "phone")
-})
+@Table(name = "Users")
 @Getter
 @Setter
-public class User implements UserDetails {
+public class User extends BaseEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -46,9 +42,9 @@ public class User implements UserDetails {
     @Column(name = "password")
     private String password;
 
-    @NotNull(message = "Role can not be null")
-    @Column(name = "role")
-    private String role;
+    @ManyToOne
+    @JoinColumn(name = "roleId")
+    private Role role;
 
     @NotBlank(message = "Phone number can not be null")
     @Pattern(regexp = "^\\+90\\d{10}$", message = "Phone number must start with +90 and be followed by 10 digits")
@@ -62,7 +58,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+        return List.of(new SimpleGrantedAuthority(role.getRoleName()));
     }
 
     @Override
