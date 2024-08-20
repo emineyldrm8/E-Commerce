@@ -17,7 +17,7 @@ public class Role extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "roleId")
-    private Long roleId;
+    private Long id;
 
     @NotBlank(message = "Role can not be null")
     @Column(name = "roleName",unique = true)

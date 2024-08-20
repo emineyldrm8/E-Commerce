@@ -3,7 +3,6 @@ package com.haratres.ecommerce.service;
 import com.haratres.ecommerce.dto.UserLoginDto;
 import com.haratres.ecommerce.dto.UserRegisterDto;
 import com.haratres.ecommerce.mapper.UserMapper;
-import com.haratres.ecommerce.model.User;
 import com.haratres.ecommerce.repository.UserRepository;
 import com.haratres.ecommerce.responses.AuthenticationResponse;
 import org.springframework.security.authentication.AuthenticationManager;
