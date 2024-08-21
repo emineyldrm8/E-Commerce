@@ -58,9 +58,9 @@ public class ProductController {
 
 
     @PutMapping("/{id}")
-  //  @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id,@RequestBody UpdateProductDto updatedProductDto) {
-        return ResponseEntity.ok(productService.updateProductByName(id,updatedProductDto));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductDto> updateProductById(@PathVariable Long id,@RequestBody UpdateProductDto updatedProductDto) {
+        return ResponseEntity.ok(productService.updateProductById(id,updatedProductDto));
     }
 }
 

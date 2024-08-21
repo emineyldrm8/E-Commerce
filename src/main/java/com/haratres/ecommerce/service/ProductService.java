@@ -90,7 +90,7 @@ public class ProductService {
         return product;
     }
 
-    public ProductDto updateProductByName(Long id,UpdateProductDto updatedProductDto ) {
+    public ProductDto updateProductById(Long id,UpdateProductDto updatedProductDto ) {
         Product updatedProduct = productMapper.toProduct(updatedProductDto);
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> {

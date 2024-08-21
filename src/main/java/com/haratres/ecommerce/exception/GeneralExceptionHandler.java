@@ -54,20 +54,20 @@ public class GeneralExceptionHandler {
     @ExceptionHandler(NotDeletedException.class)
     public ResponseEntity<ErrorResponse> handleDeletedException(NotDeletedException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage()
         );
-        logger.error("NotDeletedException occurred: {}", HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        logger.error("NotDeletedException occurred: {}", HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NotUpdatedException.class)
     public ResponseEntity<ErrorResponse> handleUpdatedException(NotUpdatedException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.CONFLICT.value(),
+                HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage()
         );
-        logger.error("NotUpdatedException occurred: {}", HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        logger.error("NotUpdatedException occurred: {}", HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }
