@@ -1,6 +1,8 @@
 package com.haratres.ecommerce.controller;
 
+import com.haratres.ecommerce.dto.CreateProductDto;
 import com.haratres.ecommerce.dto.ProductDto;
+import com.haratres.ecommerce.dto.UpdateProductDto;
 import com.haratres.ecommerce.dto.UserRegisterDto;
 import com.haratres.ecommerce.mapper.ProductMapper;
 import com.haratres.ecommerce.model.Product;
@@ -34,15 +36,15 @@ public class ProductController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping()
-    public ResponseEntity<ProductDto> saveProduct(@RequestBody ProductDto productDto) {
-        ProductDto savedProduct = productService.save(productDto);
+    public ResponseEntity<ProductDto> saveProduct(@RequestBody CreateProductDto createProductDto) {
+        ProductDto savedProduct = productService.save(createProductDto);
         return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
     }
 
 
     @PostMapping("/createAll")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ProductDto>> saveAllProducts(@RequestBody List<ProductDto> productDtoList) {
+    public ResponseEntity<List<ProductDto>> saveAllProducts(@RequestBody List<CreateProductDto> productDtoList) {
         return ResponseEntity.ok(productService.saveAll(productDtoList));
     }
 
@@ -55,10 +57,10 @@ public class ProductController {
     }
 
 
-    @PutMapping()
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductDto> updateProduct(@RequestBody ProductDto updatedProductDto) {
-        return ResponseEntity.ok(productService.updateProductByName(updatedProductDto));
+    @PutMapping("/{id}")
+  //  @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id,@RequestBody UpdateProductDto updatedProductDto) {
+        return ResponseEntity.ok(productService.updateProductByName(id,updatedProductDto));
     }
 }
 

@@ -1,6 +1,8 @@
 package com.haratres.ecommerce.service;
 
+import com.haratres.ecommerce.dto.CreateProductDto;
 import com.haratres.ecommerce.dto.ProductDto;
+import com.haratres.ecommerce.dto.UpdateProductDto;
 import com.haratres.ecommerce.exception.*;
 import com.haratres.ecommerce.mapper.ProductMapper;
 import com.haratres.ecommerce.model.Product;
@@ -23,32 +25,28 @@ public class ProductService {
     }
 
     public List<Product> getAllProducts() {
-        logger.info("Fetching all products.");
         List<Product> products = productRepository.findAll();
-        logger.info("Found {} products.", products.size());
         return products;
     }
 
-    public ProductDto save(ProductDto productDto) {
-        logger.info("Saving product: {}", productDto);
-        Product product = productMapper.toProduct(productDto);
+    public ProductDto save(CreateProductDto createProductDto) {
+        Product product = productMapper.toProduct(createProductDto);
         if (productRepository.existsByName(product.getName())) {
-            logger.error("Conflict occurred: Product with name {} already exists.", productDto.getName());
-            throw new DuplicateEntryException("Product with name " + productDto.getName() + " already exists.");
+            logger.error("Conflict occurred: Product with name {} already exists.", createProductDto.getName());
+            throw new DuplicateEntryException("Product with name " + createProductDto.getName() + " already exists.");
         }
         try {
             Product savedProduct = productRepository.save(product);
             logger.info("Saved product with id: {}", savedProduct.getId());
             return productMapper.toProductDto(savedProduct);
         } catch (Exception e) {
-            logger.error("Failed to save the product: {}", productDto.getName());
-            throw new NotSavedException("Failed to save the product: " + productDto.getName(), e);
+            logger.error("Failed to save the product: {}", createProductDto.getName());
+            throw new NotSavedException("Failed to save the product: " + createProductDto.getName(), e);
         }
     }
 
-    public List<ProductDto> saveAll(List<ProductDto> productDtoList) {
-        logger.info("Saving {} products.", productDtoList.size());
-        List<Product> products = productMapper.toProductList(productDtoList);
+    public List<ProductDto> saveAll(List<CreateProductDto> createProductDtoList) {
+        List<Product> products = productMapper.toProductListFromCreate(createProductDtoList);
         List<String> productNames = products.stream().map(Product::getName).collect(Collectors.toList());
         List<Product> existingProducts = productRepository.findAllByNameIn(productNames);
         if (!existingProducts.isEmpty()) {
@@ -61,8 +59,8 @@ public class ProductService {
             logger.info("Saved {} products.", savedProducts.size());
             return productMapper.toProductDtoList(savedProducts);
         } catch (Exception e) {
-            logger.error("Failed to save the product list: {}", productDtoList);
-            throw new NotSavedException("Failed to save the product list : " + productDtoList.stream().map(productMapper::toProduct).collect(Collectors.toList()), e);
+            logger.error("Failed to save the product list: {}", createProductDtoList);
+            throw new NotSavedException("Failed to save the product list : " + createProductDtoList.stream().map(productMapper::toProduct).collect(Collectors.toList()), e);
         }
     }
 
@@ -92,17 +90,15 @@ public class ProductService {
         return product;
     }
 
-    public ProductDto updateProductByName(ProductDto updatedProductDto) {
-
-        logger.info("Updating product with name: {}", updatedProductDto.getName());
+    public ProductDto updateProductByName(Long id,UpdateProductDto updatedProductDto ) {
         Product updatedProduct = productMapper.toProduct(updatedProductDto);
-        Product product = productRepository.findByName(updatedProduct.getName())
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> {
-                    logger.error("Product not found with name: {}", updatedProduct.getName());
-                    return new NotFoundException("Product not found with name: " + updatedProduct.getName());
+                    logger.error("Product not found with id: {}", updatedProduct.getId());
+                    return new NotFoundException("Product not found with id: " + updatedProduct.getId());
                 });
         try {
-            product.setName(updatedProduct.getName());
+            product.setName(product.getName());
             product.setTitle(updatedProduct.getTitle());
             product.setDescription(updatedProduct.getDescription());
             product.setPrice(updatedProduct.getPrice());
@@ -112,8 +108,8 @@ public class ProductService {
             logger.info("Updated product with name: {}", updatedProduct.getName());
             return productMapper.toProductDto(savedProduct);
         } catch (Exception e) {
-            logger.error("An unexpected error occurred while updating product with name: {}", updatedProductDto.getName(), e);
-            throw new NotUpdatedException("Failed to update the product with name: " + updatedProductDto.getName(), e);
+            logger.error("An unexpected error occurred while updating product with name: {}", product.getName(), e);
+            throw new NotUpdatedException("Failed to update the product with name: " + product.getName(), e);
         }
     }
 
