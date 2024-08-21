@@ -7,6 +7,7 @@ import com.haratres.ecommerce.model.Product;
 import com.haratres.ecommerce.responses.AuthenticationResponse;
 import com.haratres.ecommerce.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -21,21 +22,23 @@ public class ProductController {
 
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
 
-    @GetMapping("/all")
+    @GetMapping()
     public ResponseEntity<List<Product>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
-    @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping()
     public ResponseEntity<ProductDto> saveProduct(@RequestBody ProductDto productDto) {
-        return ResponseEntity.ok(productService.save(productDto));
+        ProductDto savedProduct = productService.save(productDto);
+        return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
     }
+
 
     @PostMapping("/createAll")
     @PreAuthorize("hasRole('ADMIN')")
@@ -44,13 +47,15 @@ public class ProductController {
     }
 
 
-    @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public void deleteProductById(@PathVariable Long id) {
+    @DeleteMapping("/{id}")
+     @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteProductById(@PathVariable Long id) {
         productService.deleteProductById(id);
+        return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/update")
+
+    @PutMapping()
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDto> updateProduct(@RequestBody ProductDto updatedProductDto) {
         return ResponseEntity.ok(productService.updateProductByName(updatedProductDto));

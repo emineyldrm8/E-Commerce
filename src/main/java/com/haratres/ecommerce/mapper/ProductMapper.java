@@ -11,10 +11,7 @@ import java.util.List;
 public interface ProductMapper {
     ProductMapper INSTANCE= Mappers.getMapper(ProductMapper.class);
 
-    //Model to DTO
     ProductDto toProductDto(Product product);
-
-    //DTO to Model
     Product toProduct(ProductDto productDto);
 
     List<Product> toProductList(List<ProductDto> productDtoList);

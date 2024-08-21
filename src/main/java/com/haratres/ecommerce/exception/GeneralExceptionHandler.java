@@ -41,4 +41,33 @@ public class GeneralExceptionHandler {
         logger.error("InvalidRoleException occurred: {}", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(NotSavedException.class)
+    public ResponseEntity<ErrorResponse> handleSavedException(NotSavedException ex)
+    {
+        ErrorResponse errorResponse=new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage());
+        logger.error("NotSavedException occured: {}",HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponse,HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(NotDeletedException.class)
+    public ResponseEntity<ErrorResponse> handleDeletedException(NotDeletedException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage()
+        );
+        logger.error("NotDeletedException occurred: {}", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(NotUpdatedException.class)
+    public ResponseEntity<ErrorResponse> handleUpdatedException(NotUpdatedException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage()
+        );
+        logger.error("NotUpdatedException occurred: {}", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
 }
