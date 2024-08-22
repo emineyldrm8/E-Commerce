@@ -1,7 +1,6 @@
 package com.haratres.ecommerce.controller;
 
 import com.haratres.ecommerce.dto.CartDto;
-import com.haratres.ecommerce.model.Cart;
 import com.haratres.ecommerce.service.CartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

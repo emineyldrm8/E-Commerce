@@ -4,7 +4,6 @@ import com.haratres.ecommerce.dto.CartDto;
 import com.haratres.ecommerce.exception.AccessDeniedException;
 import com.haratres.ecommerce.exception.NotFoundException;
 import com.haratres.ecommerce.mapper.CartMapper;
-import com.haratres.ecommerce.mapper.ProductMapper;
 import com.haratres.ecommerce.model.Cart;
 import com.haratres.ecommerce.model.CartEntry;
 import com.haratres.ecommerce.model.Product;
