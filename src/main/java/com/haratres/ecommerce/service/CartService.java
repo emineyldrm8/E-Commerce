@@ -1,6 +1,7 @@
 package com.haratres.ecommerce.service;
 
 import com.haratres.ecommerce.dto.CartDto;
+import com.haratres.ecommerce.dto.CartEntryDto;
 import com.haratres.ecommerce.exception.AccessDeniedException;
 import com.haratres.ecommerce.exception.NotFoundException;
 import com.haratres.ecommerce.mapper.CartMapper;
@@ -20,8 +21,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CartService {
@@ -43,18 +47,27 @@ public class CartService {
     private ProductService productService;
     private final CartMapper cartMapper = CartMapper.INSTANCE;
 
+
     public CartDto getOrCreateCart(Long userId, Long cartId) {
         Cart existingCart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new NotFoundException("Cart not found with cart id: " + cartId));
-        validateUserAccess(userId, existingCart.getUser().getId());
         if (Objects.isNull(existingCart)) {
-            User user = userRepository.findById(userId).get();
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("User not found with user id: " + userId));
             Cart newCart = new Cart();
             newCart.setUser(user);
-            return cartMapper.toCartDto(cartRepository.save(newCart));
+            Cart savedCart = cartRepository.save(newCart);
+            return new CartDto(Collections.emptyList());
         } else {
+            validateUserAccess(userId, existingCart.getUser().getId());
             Hibernate.initialize(existingCart.getCartEntries());
-            return cartMapper.toCartDto(existingCart);
+            List<CartEntryDto> cartEntryDtos = existingCart.getCartEntries().stream()
+                    .map(entry -> new CartEntryDto(
+                            entry.getProduct().getId(),
+                            entry.getProduct().getName(),
+                            entry.getQuantity()))
+                    .collect(Collectors.toList());
+            return new CartDto(cartEntryDtos);
         }
     }
 
@@ -83,7 +96,15 @@ public class CartService {
             newEntry.setQuantity(quantity);
             cartEntryRepository.save(newEntry);
         }
-        return cartMapper.toCartDto(cartRepository.save(existingCart));
+        Cart updatedCart = cartRepository.save(existingCart);
+        List<CartEntryDto> cartEntryDtos = updatedCart.getCartEntries().stream()
+                .map(entry -> new CartEntryDto(
+                        entry.getProduct().getId(),
+                        entry.getProduct().getName(),
+                        entry.getQuantity()))
+                .collect(Collectors.toList());
+
+        return new CartDto(cartEntryDtos);
     }
 
     public CartDto decreaseProductQuantity(Long userId, Long cartId, Long productId, int quantity) {
@@ -98,15 +119,24 @@ public class CartService {
             CartEntry cartEntry = existingEntry.get();
             int newQuantity = cartEntry.getQuantity() - quantity;
             if (newQuantity > 0) {
-                cartEntry.setQuantity(cartEntry.getQuantity() - quantity);
+                cartEntry.setQuantity(newQuantity);
+                cartEntryRepository.save(cartEntry);
             } else {
                 existingCart.getCartEntries().remove(cartEntry);
+                cartEntryRepository.delete(cartEntry);
             }
         } else {
-            logger.error("Product not found in cart {}", product.getName());
             throw new NotFoundException("Product not found in cart " + product.getName());
         }
-        return cartMapper.toCartDto(cartRepository.save(existingCart));
+        Cart updatedCart = cartRepository.save(existingCart);
+        List<CartEntryDto> cartEntryDtos = updatedCart.getCartEntries().stream()
+                .map(entry -> new CartEntryDto(
+                        entry.getProduct().getId(),
+                        entry.getProduct().getName(),
+                        entry.getQuantity()))
+                .collect(Collectors.toList());
+
+        return new CartDto(cartEntryDtos);
     }
 
     public CartDto removeProductFromCart(Long userId, Long cartId, Long productId) {
@@ -114,7 +144,14 @@ public class CartService {
                 .orElseThrow(() -> new NotFoundException("Cart not found with cart id: " + cartId));
         validateUserAccess(userId, existingCart.getUser().getId());
         existingCart.getCartEntries().removeIf(entry -> entry.getProduct().getId().equals(productId));
-        return cartMapper.toCartDto(cartRepository.save(existingCart));
+        cartRepository.save(existingCart);
+        List<CartEntryDto> cartEntryDtos = existingCart.getCartEntries().stream()
+                .map(entry -> new CartEntryDto(
+                        entry.getProduct().getId(),
+                        entry.getProduct().getName(),
+                        entry.getQuantity()))
+                .collect(Collectors.toList());
+        return new CartDto(cartEntryDtos);
     }
 
     public CartDto updateProductQuantity(Long userId, Long cartId, Long productId, int quantity) {
@@ -132,8 +169,16 @@ public class CartService {
         if (!productFound) {
             throw new NotFoundException("Product not found in cart entry: " + productId);
         }
-        return cartMapper.toCartDto(cartRepository.save(existingCart));
+        Cart updatedCart = cartRepository.save(existingCart);
+        List<CartEntryDto> cartEntryDtos = updatedCart.getCartEntries().stream()
+                .map(entry -> new CartEntryDto(
+                        entry.getProduct().getId(),
+                        entry.getProduct().getName(),
+                        entry.getQuantity()))
+                .collect(Collectors.toList());
+        return new CartDto(cartEntryDtos);
     }
+
 
     public void deleteCart(Long userId, Long cartId) {
         Cart existingCart = cartRepository.findById(cartId)
