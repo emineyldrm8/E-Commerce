@@ -1,5 +1,6 @@
 package com.haratres.ecommerce.service;
 
+import com.haratres.ecommerce.exception.AccessDeniedException;
 import com.haratres.ecommerce.exception.NotFoundException;
 import com.haratres.ecommerce.model.Cart;
 import com.haratres.ecommerce.model.CartEntry;
@@ -13,9 +14,9 @@ import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Objects;
 import java.util.Optional;
 
@@ -52,47 +53,34 @@ public class CartService {
                     return cartRepository.save(cart);
                 });
     }
-    //carta urun ekleme
-    public Cart increaseProductQuantity(String username, Long productId, int quantity) {
-        // Kullanıcının sepetini al veya yeni bir sepet oluştur
-        Cart existingCart = getOrCreateCart(username);
 
-        // Ürünü veritabanından al
+    public Cart increaseProductQuantity(Long userId, Long cartId, Long productId, int quantity) {
+        Cart existingCart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new NotFoundException("Cart not found with cart id: " + cartId));
+        validateUserAccess(userId, existingCart.getUser().getId());
         Product product = productService.getProductById(productId);
-
-        // Sepetteki mevcut CartEntry nesnesini kontrol et
         Optional<CartEntry> existingEntry = existingCart.getCartEntries().stream()
                 .filter(entry -> entry.getProduct().getId().equals(productId))
                 .findFirst();
-        //product arsa ozel sorgu yaz cart entrylerde arama ayap,cartid si su olan ve product i su olan entryyi bana getir ,butun hepsini cekmeye gerek yok
         if (existingEntry.isPresent()) {
             CartEntry cartEntry = existingEntry.get();
             int newQuantity = cartEntry.getQuantity() + quantity;
-
             if (newQuantity <= 0) {
-                // Miktar sıfır veya daha azsa, entry'i kaldır
                 existingCart.getCartEntries().remove(cartEntry);
                 cartEntryRepository.delete(cartEntry);
             } else {
-                // Miktarı güncelle ve kaydet
                 cartEntry.setQuantity(newQuantity);
                 cartEntryRepository.save(cartEntry);
             }
         } else {
-            // Ürün sepette yoksa, yeni bir CartEntry oluştur
             CartEntry newEntry = new CartEntry();
             newEntry.setCart(existingCart);
             newEntry.setProduct(product);
             newEntry.setQuantity(quantity);
-
-            // Yeni CartEntry'yi veri tabanına kaydet
             cartEntryRepository.save(newEntry);
         }
-
-        // Sepeti güncelle ve kaydet
         return cartRepository.save(existingCart);
     }
-
 
 
     //carttaki ürün sayısını azaltma
@@ -199,4 +187,21 @@ public class CartService {
     private Cart getExistingCart(User user) {
         return cartRepository.findByUser(user).orElse(null);
     }
+
+    private Long getUserIdFromCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User userDetails = (User) authentication.getPrincipal();
+        return userDetails.getId();
+    }
+
+    private void validateUserAccess(Long pathUserId, Long cartUserId) {
+        Long currentUserId = getUserIdFromCurrentUser();
+        if (!pathUserId.equals(currentUserId)) {
+            throw new AccessDeniedException("You do not have permission to modify this cart");
+        }
+        if (!cartUserId.equals(pathUserId)) {
+            throw new AccessDeniedException("You do not have permission to modify this cart");
+        }
+    }
+
 }

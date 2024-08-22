@@ -34,8 +34,8 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping()
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ProductDto> saveProduct(@RequestBody CreateProductDto createProductDto) {
         ProductDto savedProduct = productService.save(createProductDto);
         return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
@@ -43,14 +43,14 @@ public class ProductController {
 
 
     @PostMapping("/createAll")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<ProductDto>> saveAllProducts(@RequestBody List<CreateProductDto> productDtoList) {
         return ResponseEntity.ok(productService.saveAll(productDtoList));
     }
 
 
     @DeleteMapping("/{id}")
-     @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> deleteProductById(@PathVariable Long id) {
         productService.deleteProductById(id);
         return ResponseEntity.noContent().build();
@@ -58,7 +58,7 @@ public class ProductController {
 
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ProductDto> updateProductById(@PathVariable Long id,@RequestBody UpdateProductDto updatedProductDto) {
         return ResponseEntity.ok(productService.updateProductById(id,updatedProductDto));
     }

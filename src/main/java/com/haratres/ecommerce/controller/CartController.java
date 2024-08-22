@@ -27,13 +27,11 @@ public class CartController {
     // Sepete ürün ekleme
     @PostMapping("/{cartId}/increase")
     public ResponseEntity<Cart> increaseProductQuantity(
-            @PathVariable String username,
+            @PathVariable Long userId,
+            @PathVariable Long cartId,
             @RequestParam Long productId,
             @RequestParam int quantity) {
-        Cart updatedCart = cartService.increaseProductQuantity(username, productId, quantity); //cartidyi kullan usera fian gerek yok
-        //ana pathte gonderilen userid cartiddeki cartla eslesiyor mu
-        //security cpntexten kullancıyı cek o kullanıcının cureentuser la os istekle o karttaki user eşleşiyor mu
-        //hasrole hasauthority yi kulanabilirisn any authoritu
+        Cart updatedCart = cartService.increaseProductQuantity(userId,cartId, productId, quantity);
         return ResponseEntity.ok(updatedCart);
     }
 
