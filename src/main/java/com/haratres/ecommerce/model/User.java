@@ -1,6 +1,7 @@
 package com.haratres.ecommerce.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -45,6 +46,7 @@ public class User extends BaseEntity implements UserDetails {
 
     @ManyToOne
     @JoinColumn(name = "roleId")
+    @JsonIgnore // Bu alanın serileştirilmesini engeller
     private Role role;
 
     @NotBlank(message = "Phone number can not be null")
@@ -56,6 +58,8 @@ public class User extends BaseEntity implements UserDetails {
     @Email(message = "Email should be valid")
     @Column(name = "email", unique = true)
     private String email;
+
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

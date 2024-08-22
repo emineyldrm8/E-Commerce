@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/api/products/**").permitAll()
+                        .requestMatchers("/api/cart/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsImpl)

@@ -23,4 +23,5 @@ public class Product extends BaseEntity{
     private String color;
     @Column(name = "size", nullable = false)
     private String size;
+
 }

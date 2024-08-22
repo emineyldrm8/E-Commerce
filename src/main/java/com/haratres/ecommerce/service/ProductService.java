@@ -80,7 +80,6 @@ public class ProductService {
     }
 
     public Product getProductById(Long id) {
-        logger.info("Fetching product with id: {}", id);
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Product not found with id: {}", id);
