@@ -19,11 +19,11 @@ public class CartEntry extends BaseEntity {
     @ManyToOne
     @JoinColumn(name="cart_id", nullable = false)
     @JsonIgnore
-    private Cart cart; // Her CartEntry bir Cart'a ait olmalı
+    private Cart cart;
 
     @ManyToOne
     @JoinColumn(name="product_id", nullable = false)
-    private Product product; // Her CartEntry bir Product'a ait olmalı
+    private Product product;
 
     @Column(name="quantity")
     private int quantity;

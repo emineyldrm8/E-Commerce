@@ -25,12 +25,12 @@ public class ProductController {
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
 
     @GetMapping()
-    public ResponseEntity<List<Product>> getAllProducts() {
+    public ResponseEntity<List<ProductDto>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductDto> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 

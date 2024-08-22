@@ -24,8 +24,8 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    public List<Product> getAllProducts() {
-        List<Product> products = productRepository.findAll();
+    public List<ProductDto> getAllProducts() {
+        List<ProductDto> products = productMapper.toProductDtoList(productRepository.findAll());
         return products;
     }
 
@@ -79,14 +79,14 @@ public class ProductService {
         }
     }
 
-    public Product getProductById(Long id) {
+    public ProductDto getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Product not found with id: {}", id);
                     return new NotFoundException("Product not found with id:" + id);
                 });
         logger.info("Found product with id: {}", id);
-        return product;
+        return productMapper.toProductDto(product);
     }
 
     public ProductDto updateProductById(Long id,UpdateProductDto updatedProductDto ) {

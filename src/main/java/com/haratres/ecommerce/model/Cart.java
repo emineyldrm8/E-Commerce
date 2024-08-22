@@ -22,6 +22,5 @@ public class Cart extends BaseEntity {
     private User user;
 
     @OneToMany(mappedBy="cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<CartEntry> cartEntries;//1den ne olunca dbde olmuyor ztaen diğerinde var.
-    //kartın içindeki ürümü cartentryden sil
+    private List<CartEntry> cartEntries;
 }

@@ -1,15 +1,17 @@
 package com.haratres.ecommerce.controller;
 
+import com.haratres.ecommerce.dto.CartDto;
 import com.haratres.ecommerce.model.Cart;
 import com.haratres.ecommerce.service.CartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/users/{userId}/carts")//userid yi id ye cevri
+@RequestMapping("/api/users/{userId}/carts")
 public class CartController {
 
     private final Logger logger = LoggerFactory.getLogger(CartController.class);
@@ -17,77 +19,63 @@ public class CartController {
     @Autowired
     private CartService cartService;
 
-    // Sepeti ve ürünleri almak veya oluşturmak için
-    @PostMapping() //sadece postmapping olsun bu neden? ,usernamelerin hepsi userid olarak degiğşcek,getorcreatecartb mantıklı olmıs
-    public ResponseEntity<Cart> getOrCreateCart(@PathVariable String username) {
-        Cart cart = cartService.getOrCreateCart(username);
-        return ResponseEntity.ok(cart);
+    @PostMapping("/{cartId}")
+    public ResponseEntity<CartDto> getOrCreateCart(@PathVariable Long userId,
+                                                   @PathVariable Long cartId) {
+        CartDto cartDto = cartService.getOrCreateCart(userId,cartId);
+        return new ResponseEntity<>(cartDto, HttpStatus.CREATED);
     }
 
-    // Sepete ürün ekleme
     @PostMapping("/{cartId}/increase")
-    public ResponseEntity<Cart> increaseProductQuantity(
+    public ResponseEntity<CartDto> increaseProductQuantity(
             @PathVariable Long userId,
             @PathVariable Long cartId,
             @RequestParam Long productId,
             @RequestParam int quantity) {
-        Cart updatedCart = cartService.increaseProductQuantity(userId,cartId, productId, quantity);
+        CartDto updatedCart = cartService.increaseProductQuantity(userId,cartId, productId, quantity);
         return ResponseEntity.ok(updatedCart);
     }
 
-    // Sepetteki ürün miktarını azaltma
-    @PostMapping("/{username}/decrease")
-    public ResponseEntity<Cart> decreaseProductQuantity(
-            @PathVariable String username,
+    @PostMapping("/{cartId}/decrease")
+    public ResponseEntity<CartDto> decreaseProductQuantity(
+            @PathVariable Long userId,
+            @PathVariable Long cartId,
             @RequestParam Long productId,
             @RequestParam int quantity) {
-        Cart updatedCart = cartService.decreaseProductQuantity(username, productId, quantity);
+        CartDto updatedCart = cartService.decreaseProductQuantity(userId,cartId,productId,quantity);
         return ResponseEntity.ok(updatedCart);
     }
 
-    // Sepetten ürün kaldırma
-    @DeleteMapping("/{username}/remove")
+    @DeleteMapping("/{cartId}/remove")
     public ResponseEntity<Void> removeProductFromCart(
-            @PathVariable String username,
+            @PathVariable Long userId,
+            @PathVariable Long cartId,
             @RequestParam Long productId) {
-        cartService.removeProductFromCart(username, productId);
+        cartService.removeProductFromCart(userId,cartId,productId);
         return ResponseEntity.noContent().build();
     }
 
-    // Sepetteki ürün miktarını güncelleme
-    @PostMapping("/{username}/update")
-    public ResponseEntity<Cart> updateProductQuantity(
-            @PathVariable String username,
+    @PutMapping("/{cartId}/update")
+    public ResponseEntity<CartDto> updateProductQuantity(
+            @PathVariable Long userId,
+            @PathVariable Long cartId,
             @RequestParam Long productId,
             @RequestParam int quantity) {
-        Cart updatedCart = cartService.updateProductQuantity(username, productId, quantity);
+        CartDto updatedCart = cartService.updateProductQuantity(userId,cartId, productId, quantity);
         return ResponseEntity.ok(updatedCart);
     }
 
-    // Sepeti tamamen silme
-    @DeleteMapping("/{username}/delete")
-    public ResponseEntity<Void> deleteCartByUsername(@PathVariable String username) {
-        cartService.deleteCartByUsername(username);
+    @DeleteMapping("/{cartId}/delete")
+    public ResponseEntity<Void> deleteCartByUsername(@PathVariable Long userId,
+                                                     @PathVariable Long cartId) {
+        cartService.deleteCart(userId,cartId);
         return ResponseEntity.noContent().build();
     }
 
-    // Sepeti silmeden tüm kart girişlerini silme
-    @DeleteMapping("/{username}/clear-entries")
-    public ResponseEntity<Void> deleteAllCartEntries(@PathVariable String username) {
-        cartService.deleteAllCartEntries(username);
-        //butun cartentry cekip java tarafında kontrole etme
-        //native query ile repository de elle sorgu yazabiliriz jpanın yetmediği yerde
-
+    @DeleteMapping("/{cartId}/clear-entries")
+    public ResponseEntity<Void> deleteAllCartEntries(@PathVariable Long userId,
+                                                     @PathVariable Long cartId) {
+        cartService.deleteAllCartEntries(userId,cartId);
         return ResponseEntity.noContent().build();
-    }
-
-    // Ürün sepette yoksa yeni bir giriş ekleme
-    @PostMapping("/{username}/add-if-not-present")
-    public ResponseEntity<Cart> addProductToCartIfNotPresent(
-            @PathVariable String username,
-            @RequestParam Long productId,
-            @RequestParam int quantity) {
-        Cart updatedCart = cartService.addProductToCartIfNotPresent(username, productId, quantity);
-        return ResponseEntity.ok(updatedCart);
     }
 }
