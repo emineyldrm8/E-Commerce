@@ -18,23 +18,24 @@ import java.util.stream.Collectors;
 public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
-    private static Logger logger = LoggerFactory.getLogger(ProductService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
 
-    public List<Product> getAllProducts() {
-        List<Product> products = productRepository.findAll();
-        return products;
+    public List<ProductDto> getAllProducts() {
+        return productMapper.toProductDtoList(productRepository.findAll());
     }
 
     public ProductDto save(CreateProductDto createProductDto) {
         Product product = productMapper.toProduct(createProductDto);
+
         if (productRepository.existsByName(product.getName())) {
             logger.error("Conflict occurred: Product with name {} already exists.", createProductDto.getName());
             throw new DuplicateEntryException("Product with name " + createProductDto.getName() + " already exists.");
         }
+
         try {
             Product savedProduct = productRepository.save(product);
             logger.info("Saved product with id: {}", savedProduct.getId());
@@ -49,71 +50,76 @@ public class ProductService {
         List<Product> products = productMapper.toProductListFromCreate(createProductDtoList);
         List<String> productNames = products.stream().map(Product::getName).collect(Collectors.toList());
         List<Product> existingProducts = productRepository.findAllByNameIn(productNames);
+
         if (!existingProducts.isEmpty()) {
             List<String> existingProductNames = existingProducts.stream().map(Product::getName).collect(Collectors.toList());
             logger.error("Conflict occurred: Products with names {} already exist.", existingProductNames);
             throw new DuplicateEntryException("Products with names " + existingProductNames + " already exist.");
         }
+
         try {
             List<Product> savedProducts = productRepository.saveAll(products);
             logger.info("Saved {} products.", savedProducts.size());
             return productMapper.toProductDtoList(savedProducts);
         } catch (Exception e) {
             logger.error("Failed to save the product list: {}", createProductDtoList);
-            throw new NotSavedException("Failed to save the product list : " + createProductDtoList.stream().map(productMapper::toProduct).collect(Collectors.toList()), e);
+            throw new NotSavedException("Failed to save the product list: " + createProductDtoList.stream()
+                    .map(productMapper::toProduct)
+                    .collect(Collectors.toList()), e);
         }
     }
 
     public void deleteProductById(Long id) {
         logger.info("Deleting product with id: {}", id);
+
         if (!productRepository.existsById(id)) {
             logger.error("Product with id {} not found for deletion.", id);
             throw new NotFoundException("Product with id " + id + " not found for deletion.");
         }
+
         try {
             productRepository.deleteById(id);
             logger.info("Deleted product with id: {}", id);
         } catch (Exception e) {
-            logger.error("Product with id {} not found for deletion.", id);
+            logger.error("Failed to delete the product with id: {}", id, e);
             throw new NotDeletedException("Failed to delete the product with id: " + id, e);
         }
     }
 
-    public Product getProductById(Long id) {
-        logger.info("Fetching product with id: {}", id);
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> {
-                    logger.error("Product not found with id: {}", id);
-                    return new NotFoundException("Product not found with id:" + id);
-                });
-        logger.info("Found product with id: {}", id);
-        return product;
+    public ProductDto getProductDtoById(Long id) {
+        Product product = getProductById(id);
+        return productMapper.toProductDto(product);
     }
 
-    public ProductDto updateProductById(Long id,UpdateProductDto updatedProductDto ) {
-        Product updatedProduct = productMapper.toProduct(updatedProductDto);
-        Product product = productRepository.findById(id)
+    public ProductDto updateProductById(Long id, UpdateProductDto updatedProductDto) {
+        Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> {
-                    logger.error("Product not found with id: {}", updatedProduct.getId());
-                    return new NotFoundException("Product not found with id: " + updatedProduct.getId());
+                    logger.error("Product not found with id: {}", id);
+                    return new NotFoundException("Product not found with id: " + id);
                 });
+
         try {
-            product.setName(product.getName());
-            product.setTitle(updatedProduct.getTitle());
-            product.setDescription(updatedProduct.getDescription());
-            product.setPrice(updatedProduct.getPrice());
-            product.setColor(updatedProduct.getColor());
-            product.setSize(updatedProduct.getSize());
-            Product savedProduct = productRepository.save(product);
+            Product updatedProduct = productMapper.toProduct(updatedProductDto);
+            updatedProduct.setId(id); // Ensure the ID is set to the existing product's ID
+
+            Product savedProduct = productRepository.save(updatedProduct);
             logger.info("Updated product with name: {}", updatedProduct.getName());
             return productMapper.toProductDto(savedProduct);
         } catch (Exception e) {
-            logger.error("An unexpected error occurred while updating product with name: {}", product.getName(), e);
-            throw new NotUpdatedException("Failed to update the product with name: " + product.getName(), e);
+            logger.error("An unexpected error occurred while updating product with id: {}", id, e);
+            throw new NotUpdatedException("Failed to update the product with id: " + id, e);
         }
     }
 
     public boolean productNameExists(String name) {
         return productRepository.existsByName(name);
+    }
+
+    public Product getProductById(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("Product not found with id: {}", id);
+                    return new NotFoundException("Product not found with id: " + id);
+                });
     }
 }

@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
     private final UserDetailsImpl userDetailsImpl;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -34,6 +35,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/api/products/**").permitAll()
+                        .requestMatchers("/api/users/{userId}/carts").authenticated()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsImpl)
@@ -44,7 +46,6 @@ public class SecurityConfig {
                 .build();
     }
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -54,5 +55,4 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
-
 }

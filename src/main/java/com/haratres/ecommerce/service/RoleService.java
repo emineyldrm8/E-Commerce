@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RoleService {
-    private static Logger logger = LoggerFactory.getLogger(RoleService.class);
+    private static final Logger logger = LoggerFactory.getLogger(RoleService.class);
     private final RoleRepository roleRepository;
 
     public RoleService(RoleRepository roleRepository) {
@@ -17,11 +17,11 @@ public class RoleService {
     }
 
     public Role getByRoleName(String roleName) {
-        return roleRepository.findByRoleName(roleName).orElseThrow(() ->
-        {
-            logger.error("Role not found with rolename:  {}", roleName);
-            return new NotFoundException("Role not found: " + roleName);
-        });
+        return roleRepository.findByRoleName(roleName)
+                .orElseThrow(() -> {
+                    logger.error("Role not found with role name: {}", roleName);
+                    return new NotFoundException("Role not found: " + roleName);
+                });
     }
 
     public boolean roleExists(String roleName) {

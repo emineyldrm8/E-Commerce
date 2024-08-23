@@ -3,12 +3,8 @@ package com.haratres.ecommerce.dto;
 import com.haratres.ecommerce.model.Role;
 import jakarta.validation.constraints.*;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 @Data
-@Getter
-@Setter
 public class UserRegisterDto {
     @NotBlank(message = "Firstname can not be null")
     private String firstName;
