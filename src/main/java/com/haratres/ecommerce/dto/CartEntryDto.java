@@ -5,7 +5,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class CartEntryDto {
-    private Long productId;
-    private String productName;
+    private ProductDto product;
     private Integer quantity;
 }

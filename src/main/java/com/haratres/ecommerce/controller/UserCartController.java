@@ -16,15 +16,17 @@ public class UserCartController {
 
     private final Logger logger = LoggerFactory.getLogger(UserCartController.class);
 
-    @Autowired
-    private CartService cartService;
-    @Autowired
-    private CartEntryService cartEntryService;
+    private final CartService cartService;
+    private final CartEntryService cartEntryService;
+
+    public UserCartController(CartService cartService, CartEntryService cartEntryService) {
+        this.cartService = cartService;
+        this.cartEntryService = cartEntryService;
+    }
 
     @PostMapping()
-    public ResponseEntity<CartDto> getOrCreateCart(@PathVariable Long userId,
-                                                   @RequestParam Long cartId) {
-        CartDto cartDto = cartService.getOrCreateCart(userId,cartId);
+    public ResponseEntity<CartDto> getOrCreateCart(@PathVariable Long userId) {
+        CartDto cartDto = cartService.getOrCreateCart(userId);
         return new ResponseEntity<>(cartDto, HttpStatus.CREATED);
     }
 
@@ -77,7 +79,7 @@ public class UserCartController {
     @DeleteMapping("/{cartId}/entries")
     public ResponseEntity<Void> deleteAllCartEntries(@PathVariable Long userId,
                                                      @PathVariable Long cartId) {
-        cartEntryService.deleteAllCartEntries(userId,cartId);
+        cartService.deleteAllCartEntries(userId,cartId);
         return ResponseEntity.noContent().build();
     }
 }

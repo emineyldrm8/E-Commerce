@@ -79,13 +79,8 @@ public class ProductService {
         }
     }
 
-    public ProductDto getProductById(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> {
-                    logger.error("Product not found with id: {}", id);
-                    return new NotFoundException("Product not found with id:" + id);
-                });
-        logger.info("Found product with id: {}", id);
+    public ProductDto getProductDtoById(Long id) {
+        Product product = getProductById(id); // Yukarıdaki metodu çağırıyor
         return productMapper.toProductDto(product);
     }
 
@@ -114,5 +109,13 @@ public class ProductService {
 
     public boolean productNameExists(String name) {
         return productRepository.existsByName(name);
+    }
+
+    public Product getProductById(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("Product not found with id: {}", id);
+                    return new NotFoundException("Product not found with id: " + id);
+                });
     }
 }
