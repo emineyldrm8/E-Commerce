@@ -81,7 +81,7 @@ public class GeneralExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
     @ExceptionHandler(InvalidQuantityException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidQuantityException(AccessDeniedException ex) {
+    public ResponseEntity<ErrorResponse> handleInvalidQuantityException(InvalidQuantityException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage()
@@ -89,5 +89,4 @@ public class GeneralExceptionHandler {
         logger.error("InvalidQuantityException occurred: {}", HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
-
 }
