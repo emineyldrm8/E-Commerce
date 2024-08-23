@@ -22,9 +22,9 @@ public class CartEntry extends BaseEntity {
     private Cart cart;
 
     @ManyToOne
-    @JoinColumn(name="product_id", nullable = false)
+    @JoinColumn(name="product_id",nullable = false)
     private Product product;
 
-    @Column(name="quantity")
+    @Column(name="quantity",nullable = false)
     private int quantity;
 }

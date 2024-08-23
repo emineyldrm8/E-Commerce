@@ -1,6 +1,7 @@
 package com.haratres.ecommerce.controller;
 
 import com.haratres.ecommerce.dto.CartDto;
+import com.haratres.ecommerce.service.CartEntryService;
 import com.haratres.ecommerce.service.CartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,16 +12,18 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users/{userId}/carts")
-public class CartController {
+public class UserCartController {
 
-    private final Logger logger = LoggerFactory.getLogger(CartController.class);
+    private final Logger logger = LoggerFactory.getLogger(UserCartController.class);
 
     @Autowired
     private CartService cartService;
+    @Autowired
+    private CartEntryService cartEntryService;
 
-    @PostMapping("/{cartId}")
+    @PostMapping()
     public ResponseEntity<CartDto> getOrCreateCart(@PathVariable Long userId,
-                                                   @PathVariable Long cartId) {
+                                                   @RequestParam Long cartId) {
         CartDto cartDto = cartService.getOrCreateCart(userId,cartId);
         return new ResponseEntity<>(cartDto, HttpStatus.CREATED);
     }
@@ -45,16 +48,16 @@ public class CartController {
         return ResponseEntity.ok(updatedCart);
     }
 
-    @DeleteMapping("/{cartId}/remove")
+    @DeleteMapping("/{cartId}/products/{productId}")
     public ResponseEntity<Void> removeProductFromCart(
             @PathVariable Long userId,
             @PathVariable Long cartId,
-            @RequestParam Long productId) {
+            @PathVariable Long productId) {
         cartService.removeProductFromCart(userId,cartId,productId);
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{cartId}/update")
+    @PutMapping("/{cartId}")
     public ResponseEntity<CartDto> updateProductQuantity(
             @PathVariable Long userId,
             @PathVariable Long cartId,
@@ -64,17 +67,17 @@ public class CartController {
         return ResponseEntity.ok(updatedCart);
     }
 
-    @DeleteMapping("/{cartId}/delete")
+    @DeleteMapping("/{cartId}")
     public ResponseEntity<Void> deleteCartByUsername(@PathVariable Long userId,
                                                      @PathVariable Long cartId) {
         cartService.deleteCart(userId,cartId);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{cartId}/clear-entries")
+    @DeleteMapping("/{cartId}/entries")
     public ResponseEntity<Void> deleteAllCartEntries(@PathVariable Long userId,
                                                      @PathVariable Long cartId) {
-        cartService.deleteAllCartEntries(userId,cartId);
+        cartEntryService.deleteAllCartEntries(userId,cartId);
         return ResponseEntity.noContent().build();
     }
 }

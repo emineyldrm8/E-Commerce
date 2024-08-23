@@ -4,12 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 @Data
-@Getter
-@Setter
 public class UserLoginDto {
     @NotBlank(message = "Username can not be null")
     @Size(min = 2, max = 30, message = "Username must be between 2 and 30 characters")

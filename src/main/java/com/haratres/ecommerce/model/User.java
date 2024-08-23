@@ -46,7 +46,7 @@ public class User extends BaseEntity implements UserDetails {
 
     @ManyToOne
     @JoinColumn(name = "roleId")
-    @JsonIgnore // Bu alanın serileştirilmesini engeller
+    @JsonIgnore
     private Role role;
 
     @NotBlank(message = "Phone number can not be null")

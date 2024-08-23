@@ -4,6 +4,7 @@ import com.haratres.ecommerce.dto.CartDto;
 import com.haratres.ecommerce.dto.CartEntryDto;
 import com.haratres.ecommerce.exception.AccessDeniedException;
 import com.haratres.ecommerce.exception.NotFoundException;
+import com.haratres.ecommerce.mapper.CartEntryMapper;
 import com.haratres.ecommerce.mapper.CartMapper;
 import com.haratres.ecommerce.model.Cart;
 import com.haratres.ecommerce.model.CartEntry;
@@ -46,11 +47,12 @@ public class CartService {
     @Autowired
     private ProductService productService;
     private final CartMapper cartMapper = CartMapper.INSTANCE;
+    private final CartEntryMapper cartEntryMapper = CartEntryMapper.INSTANCE;
 
 
     public CartDto getOrCreateCart(Long userId, Long cartId) {
         Cart existingCart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new NotFoundException("Cart not found with cart id: " + cartId));
+                .orElse(null);
         if (Objects.isNull(existingCart)) {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new NotFoundException("User not found with user id: " + userId));
@@ -60,7 +62,6 @@ public class CartService {
             return new CartDto(Collections.emptyList());
         } else {
             validateUserAccess(userId, existingCart.getUser().getId());
-            Hibernate.initialize(existingCart.getCartEntries());
             List<CartEntryDto> cartEntryDtos = existingCart.getCartEntries().stream()
                     .map(entry -> new CartEntryDto(
                             entry.getProduct().getId(),
@@ -185,29 +186,10 @@ public class CartService {
                 .orElseThrow(() -> new NotFoundException("Cart not found with cart id: " + cartId));
         validateUserAccess(userId, existingCart.getUser().getId());
         String username = existingCart.getUser().getUsername();
-        if (Objects.isNull(existingCart)) {
-            logger.error("Cart not found for username {}", username);
-            throw new NotFoundException("Cart not found for username: " + username);
-        } else {
-            cartRepository.delete(existingCart);
-            logger.info("Cart deleted for username {}", username);
-        }
+        cartRepository.delete(existingCart);
+        logger.info("Cart deleted for username {}", username);
     }
 
-    public void deleteAllCartEntries(Long userId, Long cartId) {
-        Cart existingCart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new NotFoundException("Cart not found with cart id: " + cartId));
-        validateUserAccess(userId, existingCart.getUser().getId());
-        String username = existingCart.getUser().getUsername();
-        if (Objects.isNull(existingCart)) {
-            logger.error("Cart not found for username {}", username);
-            throw new NotFoundException("Cart not found for username: " + username);
-        } else {
-            cartEntryRepository.deleteAll(existingCart.getCartEntries());
-            cartRepository.save(existingCart);
-            logger.info("Cart entries deleted for username {}", username);
-        }
-    }
 
     public Long getUserIdFromCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
