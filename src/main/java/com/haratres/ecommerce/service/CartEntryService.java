@@ -9,8 +9,6 @@ import com.haratres.ecommerce.model.Product;
 import com.haratres.ecommerce.repository.CartEntryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +16,7 @@ import java.util.Optional;
 
 @Service
 public class CartEntryService {
+
     private final Logger logger = LoggerFactory.getLogger(CartEntryService.class);
     private final CartEntryRepository cartEntryRepository;
 
@@ -43,13 +42,12 @@ public class CartEntryService {
         }
     }
 
-    public void deleteAllCartEntries(List<CartEntry> cartEntries)
-    {
+    public void deleteAllCartEntries(List<CartEntry> cartEntries) {
         try {
             cartEntryRepository.deleteAll(cartEntries);
         } catch (Exception e) {
             logger.error("Failed to delete CartEntryList");
-            throw new NotDeletedException("Failed to delete CartEntryList " + e);
+            throw new NotDeletedException("Failed to delete CartEntryList", e);
         }
     }
 
@@ -59,13 +57,11 @@ public class CartEntryService {
 
     public void deleteCartEntryByCartAndProduct(Cart cart, Product product) {
         Optional<CartEntry> cartEntryOptional = findCartEntryByCartAndProduct(cart, product);
-        if(cartEntryOptional.isPresent())
-        {
-              deleteCartEntry(cartEntryOptional.get());
-        }else{
+        if (cartEntryOptional.isPresent()) {
+            deleteCartEntry(cartEntryOptional.get());
+        } else {
             logger.error("Cart entry not found for deletion.");
             throw new NotFoundException("Cart entry not found for deletion.");
         }
     }
-
 }

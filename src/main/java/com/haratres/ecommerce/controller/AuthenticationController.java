@@ -12,12 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthenticationController {
-    private static Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
     private final AuthenticationService authenticationService;
 
     public AuthenticationController(AuthenticationService authenticationService) {
@@ -25,12 +24,16 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody UserRegisterDto userRegisterDto) {
-        return ResponseEntity.ok(authenticationService.register(userRegisterDto));
+    public ResponseEntity<AuthenticationResponse> register(
+            @RequestBody UserRegisterDto userRegisterDto) {
+        AuthenticationResponse response = authenticationService.register(userRegisterDto);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(@RequestBody UserLoginDto userLoginDto) {
-        return ResponseEntity.ok(authenticationService.authenticate(userLoginDto));
+    public ResponseEntity<AuthenticationResponse> login(
+            @RequestBody UserLoginDto userLoginDto) {
+        AuthenticationResponse response = authenticationService.authenticate(userLoginDto);
+        return ResponseEntity.ok(response);
     }
 }

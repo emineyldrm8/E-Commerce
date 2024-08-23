@@ -12,21 +12,23 @@ import java.util.List;
 
 @Configuration
 public class RoleLoader {
+
     private final RoleRepository roleRepository;
     private final RoleService roleService;
 
-    public RoleLoader(RoleRepository roleRepository,RoleService roleService) {
+    public RoleLoader(RoleRepository roleRepository, RoleService roleService) {
         this.roleRepository = roleRepository;
-        this.roleService= roleService;
+        this.roleService = roleService;
     }
 
     @Bean
-    CommandLineRunner initData(RoleRepository roleRepository){
+    public CommandLineRunner initData() {
         return args -> {
             List<String> roleNames = Arrays.asList("USER", "ADMIN");
             for (String roleName : roleNames) {
                 if (!roleService.roleExists(roleName)) {
-                    roleRepository.save(new Role(roleName));
+                    Role role = new Role(roleName);
+                    roleRepository.save(role);
                 }
             }
         };

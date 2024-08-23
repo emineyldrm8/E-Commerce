@@ -16,12 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
+
     @Autowired
     private ProductService productService;
 
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<List<ProductDto>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
@@ -31,20 +32,18 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductDtoById(id));
     }
 
-    @PostMapping()
+    @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ProductDto> saveProduct(@RequestBody CreateProductDto createProductDto) {
         ProductDto savedProduct = productService.save(createProductDto);
         return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
     }
 
-
     @PostMapping("/createAll")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<ProductDto>> saveAllProducts(@RequestBody List<CreateProductDto> productDtoList) {
         return ResponseEntity.ok(productService.saveAll(productDtoList));
     }
-
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -53,11 +52,11 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<ProductDto> updateProductById(@PathVariable Long id,@RequestBody UpdateProductDto updatedProductDto) {
-        return ResponseEntity.ok(productService.updateProductById(id,updatedProductDto));
+    public ResponseEntity<ProductDto> updateProductById(
+            @PathVariable Long id,
+            @RequestBody UpdateProductDto updatedProductDto) {
+        return ResponseEntity.ok(productService.updateProductById(id, updatedProductDto));
     }
 }
-

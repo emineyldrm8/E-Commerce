@@ -20,32 +20,31 @@ import java.util.Optional;
 
 @Service
 public class CartService {
+
     private final Logger logger = LoggerFactory.getLogger(CartService.class);
 
     private final CartRepository cartRepository;
     private final CartEntryService cartEntryService;
     private final ProductService productService;
     private final UserService userService;
+    private final CartMapper cartMapper = CartMapper.INSTANCE;
 
-    public CartService(CartRepository cartRepository,CartEntryService cartEntryService, ProductService productService, UserService userService) {
+    public CartService(CartRepository cartRepository, CartEntryService cartEntryService, ProductService productService, UserService userService) {
         this.cartRepository = cartRepository;
         this.cartEntryService = cartEntryService;
         this.productService = productService;
         this.userService = userService;
     }
 
-    private final CartMapper cartMapper = CartMapper.INSTANCE;
-
-
-
     public CartDto getOrCreateCart(Long userId) {
         Cart existingCart = cartRepository.findByUserId(userId)
                 .orElse(null);
+
         if (Objects.isNull(existingCart)) {
             User user = userService.getUserById(userId);
             Cart newCart = new Cart();
             newCart.setUser(user);
-            Cart savedCart =saveCart(newCart);
+            Cart savedCart = saveCart(newCart);
             return cartMapper.toCartDto(savedCart);
         } else {
             validateUserAccess(userId, existingCart.getUser().getId());
@@ -58,11 +57,12 @@ public class CartService {
         validateUserAccess(userId, existingCart.getUser().getId());
         Product product = productService.getProductById(productId);
         Optional<CartEntry> existingEntry = cartEntryService.findCartEntryByCartAndProduct(existingCart, product);
+
         if (existingEntry.isPresent()) {
             CartEntry cartEntry = existingEntry.get();
             int newQuantity = cartEntry.getQuantity() + quantity;
-                cartEntry.setQuantity(newQuantity);
-                cartEntryService.saveCartEntry(cartEntry);
+            cartEntry.setQuantity(newQuantity);
+            cartEntryService.saveCartEntry(cartEntry);
         } else {
             CartEntry newEntry = new CartEntry();
             newEntry.setCart(existingCart);
@@ -70,6 +70,7 @@ public class CartService {
             newEntry.setQuantity(quantity);
             cartEntryService.saveCartEntry(newEntry);
         }
+
         return cartMapper.toCartDto(saveCart(existingCart));
     }
 
@@ -78,6 +79,7 @@ public class CartService {
         validateUserAccess(userId, existingCart.getUser().getId());
         Product product = productService.getProductById(productId);
         Optional<CartEntry> existingEntry = cartEntryService.findCartEntryByCartAndProduct(existingCart, product);
+
         if (existingEntry.isPresent()) {
             CartEntry cartEntry = existingEntry.get();
             int newQuantity = cartEntry.getQuantity() - quantity;
@@ -91,21 +93,23 @@ public class CartService {
         } else {
             throw new NotFoundException("Product not found in cart " + product.getName());
         }
+
         return cartMapper.toCartDto(saveCart(existingCart));
     }
 
     public CartDto removeProductFromCart(Long userId, Long cartId, Long productId) {
         Cart existingCart = findCartById(cartId);
         validateUserAccess(userId, existingCart.getUser().getId());
-        cartEntryService.deleteCartEntryByCartAndProduct(existingCart,productService.getProductById(productId));
+        cartEntryService.deleteCartEntryByCartAndProduct(existingCart, productService.getProductById(productId));
         return cartMapper.toCartDto(saveCart(existingCart));
     }
 
     public CartDto updateProductQuantity(Long userId, Long cartId, Long productId, int quantity) {
         Cart existingCart = findCartById(cartId);
         validateUserAccess(userId, existingCart.getUser().getId());
-        Product product=productService.getProductById(productId);
-        Optional<CartEntry> existingEntry=cartEntryService.findCartEntryByCartAndProduct(existingCart,product);
+        Product product = productService.getProductById(productId);
+        Optional<CartEntry> existingEntry = cartEntryService.findCartEntryByCartAndProduct(existingCart, product);
+
         if (existingEntry.isPresent()) {
             CartEntry cartEntry = existingEntry.get();
             if (quantity > 0) {
@@ -118,11 +122,12 @@ public class CartService {
         } else {
             throw new NotFoundException("Product not found in cart " + product.getName());
         }
+
         return cartMapper.toCartDto(saveCart(existingCart));
     }
 
     public void deleteAllCartEntries(Long userId, Long cartId) {
-        Cart existingCart = findCartById(cartId);;
+        Cart existingCart = findCartById(cartId);
         validateUserAccess(userId, existingCart.getUser().getId());
         cartEntryService.deleteAllCartEntries(existingCart.getCartEntries());
         saveCart(existingCart);
@@ -133,8 +138,6 @@ public class CartService {
         validateUserAccess(userId, existingCart.getUser().getId());
         cartRepository.delete(existingCart);
     }
-
-
 
     private void validateUserAccess(Long pathUserId, Long cartUserId) {
         Long currentUserId = userService.getCurrentUser().getId();
@@ -162,5 +165,4 @@ public class CartService {
                     return new NotFoundException("Cart not found with id: " + cartId);
                 });
     }
-
 }

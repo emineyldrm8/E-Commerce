@@ -18,9 +18,9 @@ public class Cart extends BaseEntity {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name="user_id",unique=true,nullable = false)
+    @JoinColumn(name = "user_id", unique = true, nullable = false)
     private User user;
 
-    @OneToMany(mappedBy="cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CartEntry> cartEntries;
 }

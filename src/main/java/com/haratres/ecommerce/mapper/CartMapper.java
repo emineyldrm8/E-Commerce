@@ -17,8 +17,4 @@ public interface CartMapper {
     CartDto toCartDto(Cart cart);
     Cart toCart(CartDto cartDto);
     List<CartEntryDto> toCartEntryDtoList(List<CartEntry> cartEntries);
-
-    @Mapping(source = "product.id", target = "productId")
-    @Mapping(source = "product", target = "product")
-    CartEntryDto toCartEntryDto(CartEntry cartEntry);
 }
