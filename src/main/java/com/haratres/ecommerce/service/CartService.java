@@ -5,7 +5,6 @@ import com.haratres.ecommerce.exception.AccessDeniedException;
 import com.haratres.ecommerce.exception.InvalidQuantityException;
 import com.haratres.ecommerce.exception.NotFoundException;
 import com.haratres.ecommerce.exception.NotSavedException;
-import com.haratres.ecommerce.mapper.CartEntryMapper;
 import com.haratres.ecommerce.mapper.CartMapper;
 import com.haratres.ecommerce.model.Cart;
 import com.haratres.ecommerce.model.CartEntry;
@@ -36,7 +35,7 @@ public class CartService {
     }
 
     private final CartMapper cartMapper = CartMapper.INSTANCE;
-    private final CartEntryMapper cartEntryMapper = CartEntryMapper.INSTANCE;
+
 
 
     public CartDto getOrCreateCart(Long userId) {
