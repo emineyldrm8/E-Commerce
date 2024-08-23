@@ -4,6 +4,7 @@ import com.haratres.ecommerce.exception.NotDeletedException;
 import com.haratres.ecommerce.exception.NotSavedException;
 import com.haratres.ecommerce.model.Cart;
 import com.haratres.ecommerce.model.CartEntry;
+import com.haratres.ecommerce.model.Product;
 import com.haratres.ecommerce.repository.CartEntryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CartEntryService {
@@ -48,6 +50,10 @@ public class CartEntryService {
             logger.error("Failed to delete CartEntryList");
             throw new NotDeletedException("Failed to delete CartEntryList " + e);
         }
+    }
+
+    public Optional<CartEntry> findCartEntryByCartAndProduct(Cart cart, Product product) {
+        return cartEntryRepository.findByCartAndProduct(cart, product);
     }
 
 }
