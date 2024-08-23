@@ -1,6 +1,7 @@
 package com.haratres.ecommerce.service;
 
 import com.haratres.ecommerce.exception.NotDeletedException;
+import com.haratres.ecommerce.exception.NotFoundException;
 import com.haratres.ecommerce.exception.NotSavedException;
 import com.haratres.ecommerce.model.Cart;
 import com.haratres.ecommerce.model.CartEntry;
@@ -54,6 +55,17 @@ public class CartEntryService {
 
     public Optional<CartEntry> findCartEntryByCartAndProduct(Cart cart, Product product) {
         return cartEntryRepository.findByCartAndProduct(cart, product);
+    }
+
+    public void deleteCartEntryByCartAndProduct(Cart cart, Product product) {
+        Optional<CartEntry> cartEntryOptional = findCartEntryByCartAndProduct(cart, product);
+        if(cartEntryOptional.isPresent())
+        {
+              deleteCartEntry(cartEntryOptional.get());
+        }else{
+            logger.error("Cart entry not found for deletion.");
+            throw new NotFoundException("Cart entry not found for deletion.");
+        }
     }
 
 }

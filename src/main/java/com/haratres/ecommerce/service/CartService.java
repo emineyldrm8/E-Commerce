@@ -97,7 +97,7 @@ public class CartService {
     public CartDto removeProductFromCart(Long userId, Long cartId, Long productId) {
         Cart existingCart = findCartById(cartId);
         validateUserAccess(userId, existingCart.getUser().getId());
-        deleteCartEntryByCartAndProduct(existingCart,productService.getProductById(productId));
+        cartEntryService.deleteCartEntryByCartAndProduct(existingCart,productService.getProductById(productId));
         return cartMapper.toCartDto(saveCart(existingCart));
     }
 
@@ -134,16 +134,7 @@ public class CartService {
         cartRepository.delete(existingCart);
     }
 
-    public void deleteCartEntryByCartAndProduct(Cart cart, Product product) {
-        Optional<CartEntry> cartEntryOptional = cartEntryService.findCartEntryByCartAndProduct(cart, product);
-        if(cartEntryOptional.isPresent())
-        {
-            cartEntryService.deleteCartEntry(cartEntryOptional.get());
-        }else{
-            logger.error("Cart entry not found for deletion.");
-            throw new NotFoundException("Cart entry not found for deletion.");
-        }
-    }
+
 
     private void validateUserAccess(Long pathUserId, Long cartUserId) {
         Long currentUserId = userService.getCurrentUser().getId();
