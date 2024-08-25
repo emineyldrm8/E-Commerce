@@ -5,7 +5,6 @@ import com.haratres.ecommerce.exception.AccessDeniedException;
 import com.haratres.ecommerce.exception.DuplicateEntryException;
 import com.haratres.ecommerce.exception.NotFoundException;
 import com.haratres.ecommerce.mapper.AddressMapper;
-import com.haratres.ecommerce.mapper.CartMapper;
 import com.haratres.ecommerce.model.Address;
 import com.haratres.ecommerce.repository.AddressRepository;
 import org.slf4j.Logger;
@@ -27,18 +26,18 @@ public class AddressService {
     }
 
     public AddressDto getAddressByAddressId(Long userId, Long addressId) {
-        validateAddressAccess(userId, addressId);
-        Address address=addressRepository.findById(addressId)
+        Address address = addressRepository.findById(addressId)
                 .orElseThrow(() -> {
                     logger.error("Address not found with id: {}", addressId);
                     return new NotFoundException("Address  not found with id: " + addressId);
                 });
-         return addressMapper.toAddressDto(address);
+        validateUserAccess(userId, address.getUser().getId());
+        return addressMapper.toAddressDto(address);
     }
 
     public List<AddressDto> getAddressesByUserId(Long userId) {
-        validateUserAccess(userId);
-        List<Address> addresses=addressRepository.findAllByUserId(userId)
+        validateCurrentUserMatchesPathUser(userId);
+        List<Address> addresses = addressRepository.findAllByUserId(userId)
                 .orElseThrow(() -> {
                     logger.error("Address  not found with by user idd: {}", userId);
                     return new NotFoundException("Address not found with by user id: " + userId);
@@ -47,14 +46,13 @@ public class AddressService {
     }
 
     public AddressDto saveAddress(Long userId, AddressDto addressDto) {
-        Address address=addressMapper.toAddress(addressDto);
-        validateAddressAccess(userId, address.getUser().getId());
+        Address address = addressMapper.toAddress(addressDto);
+        validateUserAccess(userId, address.getUser().getId());
         if (doesExistsAddress(address)) {
-            logger.error("The address with title '{}' already exists for user ID: {}. Existing address ID: {}",
-                    address.getTitle(), userId, address.getId());
+            logger.error("The address with title '{}' already exists for user ID: {}.",
+                    address.getTitle(), userId);
             throw new DuplicateEntryException(
-                    "The address with title '" + address.getTitle() + "' already exists for user ID: " + userId +
-                            ". Existing address ID: " + address.getId()
+                    "The address with title '" + address.getTitle() + "' already exists for user ID: " + userId
             );
         }
         return addressMapper.toAddressDto(addressRepository.save(address));
@@ -71,43 +69,46 @@ public class AddressService {
     }
 
     public void deleteAddressByAddressId(Long userId, Long addressId) {
-        validateAddressAccess(userId,addressId);
         AddressDto address = getAddressByAddressId(userId, addressId);
         addressRepository.delete(addressMapper.toAddress(address));
     }
 
-    public void deleteAddresses(Long userId)
-    {
-        validateUserAccess(userId);
-        List<AddressDto> addresses= getAddressesByUserId(userId);
+    public void deleteAddresses(Long userId) {
+        List<AddressDto> addresses = getAddressesByUserId(userId);
         addressRepository.deleteAll(addressMapper.toAddressList(addresses));
     }
 
     public AddressDto updateAddress(Long userId, Long addressId, AddressDto updatedAddress) {
-        validateAddressAccess(userId, addressId);
         AddressDto existingAddress = getAddressByAddressId(userId, addressId);
         existingAddress.setTitle(updatedAddress.getTitle());
         existingAddress.setCountyId(updatedAddress.getCountyId());
         existingAddress.setCityId(updatedAddress.getCityId());
         existingAddress.setDistrictId(updatedAddress.getDistrictId());
         existingAddress.setText(updatedAddress.getText());
+        if (doesExistsAddress(addressMapper.toAddress(existingAddress))) {
+            logger.error("The address already exists for user ID: {}.",
+                    existingAddress.getTitle(), userId);
+            throw new DuplicateEntryException(
+                    "The address already exists for user ID: " + userId
+            );
+        }
         return addressMapper.toAddressDto(addressRepository.save(addressMapper.toAddress(existingAddress)));
     }
 
-    private void validateAddressAccess(Long pathUserId, Long addressId) {
+    private void validateUserAccess(Long pathUserId, Long addressUserId) {
         Long currentUserId = userService.getCurrentUser().getId();
         if (!pathUserId.equals(currentUserId)) {
-            throw new AccessDeniedException("You do not have permission to modify this cart");
+            throw new AccessDeniedException("You do not have permission to modify this address");
         }
-        if (!addressId.equals(pathUserId)) {
-            throw new AccessDeniedException("You do not have permission to modify this cart");
+        if (!addressUserId.equals(pathUserId)) {
+            throw new AccessDeniedException("You do not have permission to modify this address");
+        }
+    }
+    public void validateCurrentUserMatchesPathUser(Long pathUserId) {
+        Long currentUserId = userService.getCurrentUser().getId();
+        if (!pathUserId.equals(currentUserId)) {
+            throw new AccessDeniedException("You do not have permission to modify this address");
         }
     }
 
-    private void validateUserAccess(Long pathUserId) {
-        Long currentUserId = userService.getCurrentUser().getId();
-        if (!pathUserId.equals(currentUserId)) {
-            throw new AccessDeniedException("You do not have permission to modify this resource.");
-        }
-    }
 }

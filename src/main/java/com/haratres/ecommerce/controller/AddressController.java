@@ -1,6 +1,5 @@
 package com.haratres.ecommerce.controller;
 import com.haratres.ecommerce.dto.AddressDto;
-import com.haratres.ecommerce.model.Address;
 import com.haratres.ecommerce.repository.AddressRepository;
 import com.haratres.ecommerce.service.AddressService;
 import org.slf4j.Logger;
@@ -25,7 +24,7 @@ public class AddressController {
     }
 
     @GetMapping("/{addressId}")
-    public ResponseEntity<AddressDto> getAddress(@PathVariable Long addressId, @RequestParam Long userId) {
+    public ResponseEntity<AddressDto> getAddress(@PathVariable Long userId, @PathVariable Long addressId) {
         AddressDto addressDto = addressService.getAddressByAddressId(userId, addressId);
         return ResponseEntity.ok(addressDto);
     }
