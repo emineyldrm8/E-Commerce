@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/api/products/**").permitAll()
                         .requestMatchers("/api/users/{userId}/carts").authenticated()
+                        .requestMatchers("/api/users/{userId}/address").authenticated()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsImpl)
