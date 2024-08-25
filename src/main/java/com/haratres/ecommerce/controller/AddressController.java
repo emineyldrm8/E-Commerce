@@ -1,4 +1,5 @@
 package com.haratres.ecommerce.controller;
+import com.haratres.ecommerce.dto.AddressDto;
 import com.haratres.ecommerce.model.Address;
 import com.haratres.ecommerce.repository.AddressRepository;
 import com.haratres.ecommerce.service.AddressService;
@@ -24,26 +25,26 @@ public class AddressController {
     }
 
     @GetMapping("/{addressId}")
-    public ResponseEntity<Address> getAddress(@PathVariable Long addressId, @RequestParam Long userId) {
-        Address address = addressService.getAddressByAddressId(userId, addressId);
-        return ResponseEntity.ok(address);
+    public ResponseEntity<AddressDto> getAddress(@PathVariable Long addressId, @RequestParam Long userId) {
+        AddressDto addressDto = addressService.getAddressByAddressId(userId, addressId);
+        return ResponseEntity.ok(addressDto);
     }
 
     @GetMapping
-    public ResponseEntity<List<Address>> getAddresses(@PathVariable Long userId) {
-        List<Address> addresses = addressService.getAddressesByUserId(userId);
-        return ResponseEntity.ok(addresses);
+    public ResponseEntity<List<AddressDto>> getAddresses(@PathVariable Long userId) {
+        List<AddressDto> addressesDto = addressService.getAddressesByUserId(userId);
+        return ResponseEntity.ok(addressesDto);
     }
 
     @PostMapping
-    public ResponseEntity<Address> createAdress(@PathVariable Long userId,@RequestBody Address address) {
-        Address saveAddress=addressService.saveAddress(userId, address);
+    public ResponseEntity<AddressDto> createAdress(@PathVariable Long userId,@RequestBody AddressDto addressDto) {
+        AddressDto saveAddress=addressService.saveAddress(userId, addressDto);
         return new ResponseEntity<>(saveAddress, HttpStatus.CREATED);
     }
 
     @PutMapping("/{addressId}")
-    public ResponseEntity<Address>  updateAddress(@PathVariable Long userId,@PathVariable Long addressId,@RequestBody Address address) {
-        Address updatedAddress = addressService.updateAddress(userId, addressId,address);
+    public ResponseEntity<AddressDto>  updateAddress(@PathVariable Long userId,@PathVariable Long addressId,@RequestBody AddressDto addressDto) {
+        AddressDto updatedAddress = addressService.updateAddress(userId, addressId,addressDto);
         return ResponseEntity.ok(updatedAddress);
     }
 

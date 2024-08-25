@@ -30,7 +30,7 @@ public class Address extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "county_id", nullable = false)
     @NotNull(message = "County cannot be blank")
-    private County country;
+    private County county;
 
     @ManyToOne
     @JoinColumn(name = "city_id", nullable = false)

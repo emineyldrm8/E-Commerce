@@ -31,5 +31,5 @@ public class UserRegisterDto {
     private String email;
 
     @NotNull(message = "Role can not be null")
-    private Role role;
+    private RoleDto role;
 }

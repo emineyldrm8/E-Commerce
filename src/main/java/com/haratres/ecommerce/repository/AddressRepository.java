@@ -11,11 +11,11 @@ import java.util.Optional;
 
 public interface AddressRepository extends JpaRepository<Address,Long> {
     Optional<List<Address>> findAllByUserId(Long userId);
-    Optional<Address> findByCountryAndCityAndDistrictAndTextAndUserId(
-            County country,
+    boolean existsByCountyAndCityAndDistrictAndTitleAndUserId(
+            County county,
             City city,
             District district,
-            String text,
+            String title,
             Long userId
     );
 }
