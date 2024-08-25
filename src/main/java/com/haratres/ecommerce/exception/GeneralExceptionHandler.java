@@ -67,4 +67,12 @@ public class GeneralExceptionHandler {
         logger.error("InvalidQuantityException occurred: {}", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(InvalidFieldNameException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFieldNameException(InvalidFieldNameException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        logger.error("InvalidFieldNameException occurred: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
 }
+

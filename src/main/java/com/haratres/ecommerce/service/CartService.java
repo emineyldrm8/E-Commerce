@@ -126,6 +126,16 @@ public class CartService {
         return cartMapper.toCartDto(saveCart(existingCart));
     }
 
+    private void validateUserAccess(Long pathUserId, Long cartUserId) {
+        Long currentUserId = userService.getCurrentUser().getId();
+        if (!pathUserId.equals(currentUserId)) {
+            throw new AccessDeniedException("You do not have permission to modify this cart");
+        }
+        if (!cartUserId.equals(pathUserId)) {
+            throw new AccessDeniedException("You do not have permission to modify this cart");
+        }
+    }
+
     public void deleteAllCartEntries(Long userId, Long cartId) {
         Cart existingCart = findCartById(cartId);
         validateUserAccess(userId, existingCart.getUser().getId());
@@ -139,15 +149,7 @@ public class CartService {
         cartRepository.delete(existingCart);
     }
 
-    private void validateUserAccess(Long pathUserId, Long cartUserId) {
-        Long currentUserId = userService.getCurrentUser().getId();
-        if (!pathUserId.equals(currentUserId)) {
-            throw new AccessDeniedException("You do not have permission to modify this cart");
-        }
-        if (!cartUserId.equals(pathUserId)) {
-            throw new AccessDeniedException("You do not have permission to modify this cart");
-        }
-    }
+
 
     public Cart saveCart(Cart cart) {
         try {
