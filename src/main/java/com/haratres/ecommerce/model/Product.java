@@ -5,7 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Product")
+@Table(name = "Product", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"code"})
+})
 @Getter
 @Setter
 public class Product extends BaseEntity {
@@ -15,7 +17,10 @@ public class Product extends BaseEntity {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "code", nullable = false)
+    private String code;
+
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "title", nullable = false)
