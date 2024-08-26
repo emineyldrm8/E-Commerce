@@ -9,6 +9,7 @@ import com.haratres.ecommerce.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,7 +27,12 @@ public class ProductController {
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
 
     @GetMapping
-    public ResponseEntity<Page<ProductDto>> getAllProducts(@RequestBody PageRequestDto dto) {
+    public ResponseEntity<Page<ProductDto>> getAllProducts(
+            @RequestParam(name = "page") int pageNumber,
+            @RequestParam(name = "size") int pageSize,
+            @RequestParam(name = "sort") Sort.Direction sort,
+            @RequestParam(name = "sortBy") String sortByColumn){
+        PageRequestDto dto = new PageRequestDto(pageNumber,pageSize,sort,sortByColumn);
         Page<ProductDto> productPage = productService.getAllProducts(dto);
         return ResponseEntity.ok(productPage);
     }
