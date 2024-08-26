@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product,Long> {
-    Optional<Product> findByName(String name);
-    boolean existsByName(String name);
-    List<Product> findAllByNameIn(List<String> names);
+    boolean existsByCode(String code);
+    List<Product> findAllByCodeIn(List<String> codes);
 }

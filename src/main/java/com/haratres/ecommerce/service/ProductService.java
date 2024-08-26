@@ -31,9 +31,9 @@ public class ProductService {
     public ProductDto save(CreateProductDto createProductDto) {
         Product product = productMapper.toProduct(createProductDto);
 
-        if (productRepository.existsByName(product.getName())) {
-            logger.error("Conflict occurred: Product with name {} already exists.", createProductDto.getName());
-            throw new DuplicateEntryException("Product with name " + createProductDto.getName() + " already exists.");
+        if (productRepository.existsByCode(product.getCode())) {
+            logger.error("Conflict occurred: Product with code {} already exists.", createProductDto.getCode());
+            throw new DuplicateEntryException("Product with code " + createProductDto.getCode() + " already exists.");
         }
 
         try {
@@ -41,20 +41,20 @@ public class ProductService {
             logger.info("Saved product with id: {}", savedProduct.getId());
             return productMapper.toProductDto(savedProduct);
         } catch (Exception e) {
-            logger.error("Failed to save the product: {}", createProductDto.getName());
-            throw new NotSavedException("Failed to save the product: " + createProductDto.getName(), e);
+            logger.error("Failed to save the product: {}", createProductDto.getCode());
+            throw new NotSavedException("Failed to save the product: " + createProductDto.getCode(), e);
         }
     }
 
     public List<ProductDto> saveAll(List<CreateProductDto> createProductDtoList) {
         List<Product> products = productMapper.toProductListFromCreate(createProductDtoList);
-        List<String> productNames = products.stream().map(Product::getName).collect(Collectors.toList());
-        List<Product> existingProducts = productRepository.findAllByNameIn(productNames);
+        List<String> productCodes = products.stream().map(Product::getCode).collect(Collectors.toList());
+        List<Product> existingProducts = productRepository.findAllByCodeIn(productCodes);
 
         if (!existingProducts.isEmpty()) {
-            List<String> existingProductNames = existingProducts.stream().map(Product::getName).collect(Collectors.toList());
-            logger.error("Conflict occurred: Products with names {} already exist.", existingProductNames);
-            throw new DuplicateEntryException("Products with names " + existingProductNames + " already exist.");
+            List<String> existingProductCodes = existingProducts.stream().map(Product::getCode).collect(Collectors.toList());
+            logger.error("Conflict occurred: Products with codes {} already exist.", existingProductCodes);
+            throw new DuplicateEntryException("Products with codes " + existingProductCodes + " already exist.");
         }
 
         try {
@@ -100,10 +100,10 @@ public class ProductService {
 
         try {
             Product updatedProduct = productMapper.toProduct(updatedProductDto);
-            updatedProduct.setId(id); // Ensure the ID is set to the existing product's ID
+            updatedProduct.setId(id);
 
             Product savedProduct = productRepository.save(updatedProduct);
-            logger.info("Updated product with name: {}", updatedProduct.getName());
+            logger.info("Updated product with code: {}", updatedProduct.getCode());
             return productMapper.toProductDto(savedProduct);
         } catch (Exception e) {
             logger.error("An unexpected error occurred while updating product with id: {}", id, e);
@@ -111,8 +111,8 @@ public class ProductService {
         }
     }
 
-    public boolean productNameExists(String name) {
-        return productRepository.existsByName(name);
+    public boolean productCodeExists(String code) {
+        return productRepository.existsByCode(code);
     }
 
     public Product getProductById(Long id) {
