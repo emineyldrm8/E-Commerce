@@ -8,8 +8,12 @@ import com.haratres.ecommerce.exception.*;
 import com.haratres.ecommerce.mapper.ProductMapper;
 import com.haratres.ecommerce.model.Product;
 import com.haratres.ecommerce.repository.ProductRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Metamodel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,15 +23,18 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
-    private final ProductRepository productRepository;
+    @Autowired
+    private ProductRepository productRepository;
+    @Autowired
+    private EntityManager entityManager;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
-
-    public ProductService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
-    }
-
     public Page<ProductDto> getAllProducts(PageRequestDto dto) {
+        List<String> validColumns = getValidSortColumns();
+        if (!validColumns.contains(dto.getSortByColumn())) {
+            logger.error("Invalid sort column: {}" ,dto.getSortByColumn());
+            throw new NotFoundException("Invalid sort column: " + dto.getSortByColumn());
+        }
         Pageable pageable = dto.getPageable(dto);
         Page<Product> productPage = productRepository.findAll(pageable);
         return productPage.map(productMapper::toProductDto);
@@ -126,5 +133,13 @@ public class ProductService {
                     logger.error("Product not found with id: {}", id);
                     return new NotFoundException("Product not found with id: " + id);
                 });
+    }
+
+    private List<String> getValidSortColumns() {
+        Metamodel metamodel = entityManager.getMetamodel();
+        EntityType<Product> entityType = metamodel.entity(Product.class);
+        return entityType.getAttributes().stream()
+                .map(attribute -> attribute.getName())
+                .collect(Collectors.toList());
     }
 }
