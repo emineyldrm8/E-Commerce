@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AddressRepository extends JpaRepository<Address,Long> {
-    Optional<List<Address>> findAllByUserId(Long userId);
+    List<Address> findAllByUserId(Long userId);
     boolean existsByCountyAndCityAndDistrictAndTitleAndUserId(
             County county,
             City city,

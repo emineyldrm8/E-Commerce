@@ -1,5 +1,7 @@
 package com.haratres.ecommerce.controller;
 import com.haratres.ecommerce.dto.AddressDto;
+import com.haratres.ecommerce.dto.CreateAddressDto;
+import com.haratres.ecommerce.dto.UpdateAddressDto;
 import com.haratres.ecommerce.repository.AddressRepository;
 import com.haratres.ecommerce.service.AddressService;
 import org.slf4j.Logger;
@@ -36,13 +38,13 @@ public class AddressController {
     }
 
     @PostMapping
-    public ResponseEntity<AddressDto> createAdress(@PathVariable Long userId,@RequestBody AddressDto addressDto) {
+    public ResponseEntity<AddressDto> createAdress(@PathVariable Long userId,@RequestBody CreateAddressDto addressDto) {
         AddressDto saveAddress=addressService.saveAddress(userId, addressDto);
         return new ResponseEntity<>(saveAddress, HttpStatus.CREATED);
     }
 
     @PutMapping("/{addressId}")
-    public ResponseEntity<AddressDto>  updateAddress(@PathVariable Long userId,@PathVariable Long addressId,@RequestBody AddressDto addressDto) {
+    public ResponseEntity<AddressDto>  updateAddress(@PathVariable Long userId,@PathVariable Long addressId,@RequestBody UpdateAddressDto addressDto) {
         AddressDto updatedAddress = addressService.updateAddress(userId, addressId,addressDto);
         return ResponseEntity.ok(updatedAddress);
     }

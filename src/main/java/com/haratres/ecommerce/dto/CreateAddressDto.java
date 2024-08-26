@@ -3,12 +3,11 @@ package com.haratres.ecommerce.dto;
 import lombok.Data;
 
 @Data
-public class AddressDto {
-    private Long id;
+public class CreateAddressDto {
     private Long userId;
-    private CityDto city;
-    private CountyDto county;
-    private DistrictDto district;
+    private Long cityId;
+    private Long countyId;
+    private Long districtId;
     private String title;
     private String text;
 }

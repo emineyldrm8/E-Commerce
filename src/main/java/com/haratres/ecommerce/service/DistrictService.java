@@ -1,5 +1,6 @@
 package com.haratres.ecommerce.service;
 
+import com.haratres.ecommerce.exception.NotFoundException;
 import com.haratres.ecommerce.exception.NotSavedException;
 import com.haratres.ecommerce.model.County;
 import com.haratres.ecommerce.model.District;
@@ -30,5 +31,13 @@ public class DistrictService {
 
     public List<District> getAllDistricts() {
         return districtRepository.findAll();
+    }
+
+    public District getDistrictById(Long districtId) {
+        return districtRepository.findById(districtId)
+                .orElseThrow(() -> {
+                    logger.error("District not found with id: {}", districtId);
+                    return new NotFoundException("District not found with id: " + districtId);
+                });
     }
 }

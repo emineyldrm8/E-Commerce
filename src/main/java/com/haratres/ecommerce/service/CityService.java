@@ -30,4 +30,12 @@ public class CityService {
     public List<City> getAllCities() {
         return cityRepository.findAll();
     }
+
+    public City getCityById(Long cityId) {
+        return cityRepository.findById(cityId)
+                .orElseThrow(() -> {
+                    logger.error("City not found with id: {}", cityId);
+                    return new NotFoundException("City not found with id: " + cityId);
+                });
+    }
 }

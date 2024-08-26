@@ -1,11 +1,17 @@
 package com.haratres.ecommerce.service;
 
 import com.haratres.ecommerce.dto.AddressDto;
+import com.haratres.ecommerce.dto.CreateAddressDto;
+import com.haratres.ecommerce.dto.UpdateAddressDto;
 import com.haratres.ecommerce.exception.AccessDeniedException;
 import com.haratres.ecommerce.exception.DuplicateEntryException;
 import com.haratres.ecommerce.exception.NotFoundException;
+import com.haratres.ecommerce.exception.NotSavedException;
 import com.haratres.ecommerce.mapper.AddressMapper;
 import com.haratres.ecommerce.model.Address;
+import com.haratres.ecommerce.model.City;
+import com.haratres.ecommerce.model.County;
+import com.haratres.ecommerce.model.District;
 import com.haratres.ecommerce.repository.AddressRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,11 +25,18 @@ public class AddressService {
     private final UserService userService;
     private final Logger logger = LoggerFactory.getLogger(AddressService.class);
     private final AddressMapper addressMapper = AddressMapper.INSTANCE;
+    private final CityService cityService;
+    private final CountyService countyService;
+    private final DistrictService districtService;
 
-    public AddressService(AddressRepository addressRepository, UserService userService) {
+    public AddressService(AddressRepository addressRepository, UserService userService, CityService cityService, CountyService countyService, DistrictService districtService) {
         this.addressRepository = addressRepository;
         this.userService = userService;
+        this.cityService = cityService;
+        this.countyService = countyService;
+        this.districtService = districtService;
     }
+
 
     public AddressDto getAddressByAddressId(Long userId, Long addressId) {
         Address address = addressRepository.findById(addressId)
@@ -35,42 +48,44 @@ public class AddressService {
         return addressMapper.toAddressDto(address);
     }
 
+    public Address getAddressModelByAddressId(Long userId, Long addressId) {
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> {
+                    logger.error("Address not found with id: {}", addressId);
+                    return new NotFoundException("Address not found with id: " + addressId);
+                });
+        validateUserAccess(userId, address.getUser().getId());
+        return address;
+    }
+
+
     public List<AddressDto> getAddressesByUserId(Long userId) {
         validateCurrentUserMatchesPathUser(userId);
-        List<Address> addresses = addressRepository.findAllByUserId(userId)
-                .orElseThrow(() -> {
-                    logger.error("Address  not found with by user idd: {}", userId);
-                    return new NotFoundException("Address not found with by user id: " + userId);
-                });
+        List<Address> addresses = addressRepository.findAllByUserId(userId);
         return addressMapper.toAddressDtoList(addresses);
     }
 
-    public AddressDto saveAddress(Long userId, AddressDto addressDto) {
-        Address address = addressMapper.toAddress(addressDto);
-        validateUserAccess(userId, address.getUser().getId());
-        if (doesExistsAddress(address)) {
-            logger.error("The address with title '{}' already exists for user ID: {}.",
-                    address.getTitle(), userId);
-            throw new DuplicateEntryException(
-                    "The address with title '" + address.getTitle() + "' already exists for user ID: " + userId
-            );
+    public AddressDto saveAddress(Long userId, CreateAddressDto addressDto) {
+        try {
+            Address address = addressMapper.fromCreateAddressDto(addressDto);
+            validateUserAccess(userId, address.getUser().getId());
+            City newCity = cityService.getCityById(addressDto.getCityId());
+            County newCounty = countyService.getCountyById(addressDto.getCountyId());
+            District newDistrict = districtService.getDistrictById(addressDto.getDistrictId());
+            address.setCounty(newCounty);
+            address.setCity(newCity);
+            address.setDistrict(newDistrict);
+            address.setTitle(addressDto.getTitle());
+            address.setText(addressDto.getText());
+            return addressMapper.toAddressDto(addressRepository.save(address));
+        } catch (Exception e) {
+            throw new NotSavedException("Failed to save address", e);
         }
-        return addressMapper.toAddressDto(addressRepository.save(address));
-    }
-
-    public boolean doesExistsAddress(Address address) {
-        return addressRepository.existsByCountyAndCityAndDistrictAndTitleAndUserId(
-                address.getCounty(),
-                address.getCity(),
-                address.getDistrict(),
-                address.getTitle(),
-                address.getUser().getId()
-        );
     }
 
     public void deleteAddressByAddressId(Long userId, Long addressId) {
-        AddressDto address = getAddressByAddressId(userId, addressId);
-        addressRepository.delete(addressMapper.toAddress(address));
+        Address address = getAddressModelByAddressId(userId, addressId);
+        addressRepository.delete(address);
     }
 
     public void deleteAddresses(Long userId) {
@@ -78,21 +93,21 @@ public class AddressService {
         addressRepository.deleteAll(addressMapper.toAddressList(addresses));
     }
 
-    public AddressDto updateAddress(Long userId, Long addressId, AddressDto updatedAddress) {
-        AddressDto existingAddress = getAddressByAddressId(userId, addressId);
-        existingAddress.setTitle(updatedAddress.getTitle());
-        existingAddress.setCountyId(updatedAddress.getCountyId());
-        existingAddress.setCityId(updatedAddress.getCityId());
-        existingAddress.setDistrictId(updatedAddress.getDistrictId());
-        existingAddress.setText(updatedAddress.getText());
-        if (doesExistsAddress(addressMapper.toAddress(existingAddress))) {
-            logger.error("The address already exists for user ID: {}.",
-                    existingAddress.getTitle(), userId);
-            throw new DuplicateEntryException(
-                    "The address already exists for user ID: " + userId
-            );
+    public AddressDto updateAddress(Long userId, Long addressId, UpdateAddressDto updatedAddress) {
+        try {
+            Address existingAddress = getAddressModelByAddressId(userId, addressId);
+            City newCity = cityService.getCityById(updatedAddress.getCityId());
+            County newCounty = countyService.getCountyById(updatedAddress.getCountyId());
+            District newDistrict = districtService.getDistrictById(updatedAddress.getDistrictId());
+            existingAddress.setCounty(newCounty);
+            existingAddress.setCity(newCity);
+            existingAddress.setDistrict(newDistrict);
+            existingAddress.setTitle(updatedAddress.getTitle());
+            existingAddress.setText(updatedAddress.getText());
+            return addressMapper.toAddressDto(addressRepository.save(existingAddress));
+        } catch (Exception e) {
+            throw new NotSavedException("Failed to save address", e);
         }
-        return addressMapper.toAddressDto(addressRepository.save(addressMapper.toAddress(existingAddress)));
     }
 
     private void validateUserAccess(Long pathUserId, Long addressUserId) {

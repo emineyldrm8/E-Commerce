@@ -1,5 +1,6 @@
 package com.haratres.ecommerce.service;
 
+import com.haratres.ecommerce.exception.NotFoundException;
 import com.haratres.ecommerce.exception.NotSavedException;
 import com.haratres.ecommerce.model.County;
 import com.haratres.ecommerce.repository.CountyRepository;
@@ -28,5 +29,13 @@ public class CountyService {
 
     public List<County> getAllCounties() {
         return countyRepository.findAll();
+    }
+
+    public County getCountyById(Long countyId) {
+        return countyRepository.findById(countyId)
+                .orElseThrow(() -> {
+                    logger.error("County not found with id: {}", countyId);
+                    return new NotFoundException("County not found with id: " + countyId);
+                });
     }
 }
