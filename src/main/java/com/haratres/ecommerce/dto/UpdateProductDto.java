@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class UpdateProductDto {
     private String title;
+    private String code;
     private String description;
     private Double price;
     private String color;

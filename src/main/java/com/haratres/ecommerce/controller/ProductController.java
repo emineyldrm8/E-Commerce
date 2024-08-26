@@ -1,11 +1,14 @@
 package com.haratres.ecommerce.controller;
 
 import com.haratres.ecommerce.dto.CreateProductDto;
+import com.haratres.ecommerce.dto.PageRequestDto;
 import com.haratres.ecommerce.dto.ProductDto;
 import com.haratres.ecommerce.dto.UpdateProductDto;
 import com.haratres.ecommerce.mapper.ProductMapper;
 import com.haratres.ecommerce.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,8 +26,9 @@ public class ProductController {
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
 
     @GetMapping
-    public ResponseEntity<List<ProductDto>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<Page<ProductDto>> getAllProducts(@RequestBody PageRequestDto dto) {
+        Page<ProductDto> productPage = productService.getAllProducts(dto);
+        return ResponseEntity.ok(productPage);
     }
 
     @GetMapping("/{id}")
