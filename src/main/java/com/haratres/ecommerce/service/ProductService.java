@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -110,6 +111,18 @@ public class ProductService {
             throw new NotUpdatedException("Failed to update the product with id: " + id, e);
         }
     }
+
+    public List<ProductDto> searchProducts(String text) {
+        String cleanedText = text.trim().toLowerCase();
+        List<String> keywords = Arrays.asList(cleanedText.split("\\s+"));
+        List<Product> products = productRepository.findByCodeIgnoreCaseOrNameIgnoreCase(cleanedText, cleanedText);
+        for (String keyword : keywords) {
+            products.addAll(productRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(keyword, keyword));
+        }
+        List<Product> uniqueProducts = products.stream().distinct().collect(Collectors.toList());
+        return productMapper.toProductDtoList(uniqueProducts);
+    }
+
 
     public boolean productCodeExists(String code) {
         return productRepository.existsByCode(code);

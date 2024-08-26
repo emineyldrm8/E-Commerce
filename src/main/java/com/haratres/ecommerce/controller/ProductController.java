@@ -32,6 +32,11 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductDtoById(id));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductDto>> searchProducts(@RequestParam(name = "query")  String text) {
+        return ResponseEntity.ok(productService.searchProducts(text));
+    }
+
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ProductDto> saveProduct(@RequestBody CreateProductDto createProductDto) {
