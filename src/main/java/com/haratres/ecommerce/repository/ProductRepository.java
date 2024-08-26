@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product,Long> {
     boolean existsByCode(String code);
     List<Product> findAllByCodeIn(List<String> codes);
-    List<Product> findByCodeIgnoreCaseOrNameIgnoreCase(String code, String name);Q
+    List<Product> findByCodeIgnoreCaseOrNameIgnoreCase(String code, String name);
     List<Product> findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(String code, String name);
 
 }
