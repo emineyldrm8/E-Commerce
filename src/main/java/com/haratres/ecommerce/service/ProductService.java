@@ -130,11 +130,13 @@ public class ProductService {
 
     public PriceDto createPriceForProduct(Long productId, CreatePriceDto priceDto) {
         Product product = getProductById(productId);
-        if (Objects.nonNull(product.getPrice())) {
-            throw new DuplicateEntryException("Product already has a price.");
+        Price price = product.getPrice();
+        if (Objects.isNull(price)) {
+            price = priceMapper.toPriceFromCreatePriceDto(priceDto);
+            price.setProduct(product);
+        } else {
+            throw new NotSavedException("This product already has a price. You cannot create another one.");
         }
-        Price price=priceMapper.toPriceFromCreatePriceDto(priceDto);
-        price.setProduct(product);
         return priceMapper.toPriceDto(priceService.savePrice(price));
     }
 
@@ -147,4 +149,25 @@ public class ProductService {
         product.setPrice(updatedPrice);
         return priceMapper.toPriceDto(priceService.savePrice(updatedPrice));
     }
+
+    public void deletePrice(Long productId) {
+        try {
+            Product product = getProductById(productId);
+            priceService.deletePrice(product.getPrice());
+        } catch (Exception e) {
+            logger.error("Failed to delete price with id: {}",productId);
+            throw new NotDeletedException("Failed to delete price with id: " + productId, e);
+        }
+    }
+
+    public void deletePrices() {
+        try {
+            priceService.deleteAllPrices();
+        } catch (Exception e) {
+            logger.error("Failed to delete prices");
+            throw new NotDeletedException("Failed to delete prices");
+        }
+    }
+
+
 }

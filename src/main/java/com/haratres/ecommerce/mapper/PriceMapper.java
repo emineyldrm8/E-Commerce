@@ -9,6 +9,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper
 public interface PriceMapper {
 
@@ -20,16 +22,20 @@ public interface PriceMapper {
     @Mapping(target = "product.id", source = "productId")
     Price toPrice(PriceDto priceDto);
 
-    @Mapping(target = "productId", source = "product.id")
+   // @Mapping(target = "productId", source = "product.id")
     UpdatePriceDto toUpdatePriceDto(Price price);
 
-    @Mapping(target = "product.id", source = "productId")
+  //  @Mapping(target = "product.id", source = "productId")
     Price toPriceFromUpdatePriceDto(UpdatePriceDto priceDto);
 
-    @Mapping(target = "productId", source = "product.id")
+   // @Mapping(target = "productId", source = "product.id")
     CreatePriceDto toCreatePriceDto(Price price);
 
-    @Mapping(target = "product.id", source = "productId")
+    //@Mapping(target = "product.id", source = "productId")
     Price toPriceFromCreatePriceDto(CreatePriceDto priceDto);
+
+    List<PriceDto> toPriceDtoList(List<Price> prices);
+
+    List<Price> toPriceList(List<PriceDto> priceDtos);
 
 }

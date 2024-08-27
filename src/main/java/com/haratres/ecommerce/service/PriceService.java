@@ -5,6 +5,7 @@ import com.haratres.ecommerce.dto.CreateAddressDto;
 import com.haratres.ecommerce.dto.PriceDto;
 import com.haratres.ecommerce.dto.UpdateAddressDto;
 import com.haratres.ecommerce.exception.AccessDeniedException;
+import com.haratres.ecommerce.exception.NotDeletedException;
 import com.haratres.ecommerce.exception.NotFoundException;
 import com.haratres.ecommerce.exception.NotSavedException;
 import com.haratres.ecommerce.mapper.AddressMapper;
@@ -15,6 +16,8 @@ import com.haratres.ecommerce.repository.PriceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 @Service
@@ -36,6 +39,10 @@ public class PriceService {
         return priceMapper.toPriceDto(price);
     }
 
+    public List<PriceDto> getPrices() {
+        return priceMapper.toPriceDtoList(priceRepository.findAll());
+    }
+
     public Price savePrice(Price price) {
         try{
             return priceRepository.save(price);
@@ -46,5 +53,23 @@ public class PriceService {
         }
     }
 
+    public void deletePrice(Price price) {
+        try{
+            priceRepository.delete(price);
+        }
+        catch(Exception e)
+        {
+            throw new NotDeletedException("Failed to delete price", e);
+        }
+    }
 
+    public void deleteAllPrices() {
+        try{
+            priceRepository.deleteAll();
+        }
+        catch(Exception e)
+        {
+            throw new NotDeletedException("Failed to delete price", e);
+        }
+    }
 }

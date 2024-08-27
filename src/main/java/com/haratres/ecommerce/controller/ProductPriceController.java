@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/products/{productId}/prices")
 public class ProductPriceController {
@@ -21,11 +23,16 @@ public class ProductPriceController {
         this.priceService = priceService;
         this.productService = productService;
     }
-
+    //one to one oldugu için her pricein bir idsi var gerek yok,
     @GetMapping //ok
     public ResponseEntity<PriceDto> getPrice(@PathVariable Long productId) {
         PriceDto price = priceService.getPriceByProductId(productId);
         return ResponseEntity.ok(price);
+    }
+
+    @GetMapping("/all") //tarıka sor isimlndirne ve gerk var mı
+    public ResponseEntity<List<PriceDto>> getPrices(@PathVariable Long productId) {
+        return ResponseEntity.ok(priceService.getPrices());
     }
 
     @PostMapping //bu biiti
@@ -40,17 +47,15 @@ public class ProductPriceController {
         return ResponseEntity.ok(updatedPrice);
     }
 
-   /* @DeleteMapping("/{addressId}")
-    public ResponseEntity<Void> deleteAddress(
-            @PathVariable Long userId,
-            @PathVariable Long addressId) {
-        addressService.deleteAddressByAddressId(userId, addressId);
+    @DeleteMapping
+    public ResponseEntity<Void> deletePrice(@PathVariable Long productId) {
+        productService.deletePrice(productId);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> deleteAddresses(@PathVariable Long userId) {
-        addressService.deleteAddresses(userId);
+    @DeleteMapping("/all")
+    public ResponseEntity<Void> deleteAllPrices() {
+        productService.deletePrices();
         return ResponseEntity.noContent().build();
-    }*/
+    }
 }

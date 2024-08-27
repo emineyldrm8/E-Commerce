@@ -6,5 +6,5 @@ import lombok.Data;
 public class CreatePriceDto {
     private Long id;
     private Double value;
-    private Long productId;
+  //  private Long productId;
 }

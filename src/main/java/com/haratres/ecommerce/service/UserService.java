@@ -5,6 +5,7 @@ import com.haratres.ecommerce.dto.UserLoginDto;
 import com.haratres.ecommerce.exception.DuplicateEntryException;
 import com.haratres.ecommerce.exception.InvalidRoleException;
 import com.haratres.ecommerce.exception.NotFoundException;
+import com.haratres.ecommerce.exception.NotSavedException;
 import com.haratres.ecommerce.mapper.UserMapper;
 import com.haratres.ecommerce.model.Role;
 import com.haratres.ecommerce.model.User;
@@ -50,6 +51,9 @@ public class UserService {
         } catch (DataIntegrityViolationException e) {
             logger.error("Error registering user: {}. User with the same username, email, or phone already exists.", userRegisterDto.getUsername());
             throw new DuplicateEntryException("User with the same username, email, or phone already exists.");
+        } catch (Exception e) {
+            logger.error("Error registering user: {}.", userRegisterDto.getUsername());
+            throw new NotSavedException("Error registering user");
         }
     }
 
