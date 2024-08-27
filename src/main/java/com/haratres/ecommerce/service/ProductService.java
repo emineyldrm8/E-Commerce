@@ -1,10 +1,10 @@
 package com.haratres.ecommerce.service;
 
-import com.haratres.ecommerce.dto.CreateProductDto;
-import com.haratres.ecommerce.dto.ProductDto;
-import com.haratres.ecommerce.dto.UpdateProductDto;
+import com.haratres.ecommerce.dto.*;
 import com.haratres.ecommerce.exception.*;
+import com.haratres.ecommerce.mapper.StockMapper;
 import com.haratres.ecommerce.mapper.ProductMapper;
+import com.haratres.ecommerce.model.Stock;
 import com.haratres.ecommerce.model.Product;
 import com.haratres.ecommerce.repository.ProductRepository;
 import org.slf4j.Logger;
@@ -12,16 +12,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
+    private final StockService stockService;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
+    private final StockMapper stockMapper = StockMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, StockService stockService) {
         this.productRepository = productRepository;
+        this.stockService = stockService;
     }
 
     public List<ProductDto> getAllProducts() {
@@ -29,7 +33,7 @@ public class ProductService {
     }
 
     public ProductDto save(CreateProductDto createProductDto) {
-        Product product = productMapper.toProduct(createProductDto);
+        Product product = productMapper.toProductFromCreateProductDto(createProductDto);
 
         if (productRepository.existsByCode(product.getCode())) {
             logger.error("Conflict occurred: Product with code {} already exists.", createProductDto.getCode());
@@ -64,7 +68,7 @@ public class ProductService {
         } catch (Exception e) {
             logger.error("Failed to save the product list: {}", createProductDtoList);
             throw new NotSavedException("Failed to save the product list: " + createProductDtoList.stream()
-                    .map(productMapper::toProduct)
+                    .map(productMapper::toProductFromCreateProductDto)
                     .collect(Collectors.toList()), e);
         }
     }
@@ -97,9 +101,8 @@ public class ProductService {
                     logger.error("Product not found with id: {}", id);
                     return new NotFoundException("Product not found with id: " + id);
                 });
-
         try {
-            Product updatedProduct = productMapper.toProduct(updatedProductDto);
+            Product updatedProduct = productMapper.toProductFromUpdateProductDto(updatedProductDto);
             updatedProduct.setId(id);
 
             Product savedProduct = productRepository.save(updatedProduct);
@@ -121,5 +124,55 @@ public class ProductService {
                     logger.error("Product not found with id: {}", id);
                     return new NotFoundException("Product not found with id: " + id);
                 });
+    }
+
+    public StockDto createStockForProduct(Long productId, CreateStockDto stockDto) {
+        try {
+            Product product = getProductById(productId);
+            Stock existingStock = product.getStock();
+            if (Objects.equals(existingStock.getQuantity(), 0)) {
+                existingStock.setQuantity(stockDto.getQuantity());
+            } else {
+                throw new NotSavedException("This product already has stock. You cannot create another one.");
+            }
+            Stock updatedStock = stockService.saveStock(existingStock);
+            return stockMapper.toStockDto(updatedStock);
+        } catch (Exception e) {
+            throw new NotSavedException("An error occurred while processing the stock for product ID: " + productId, e);
+        }
+    }
+
+    public StockDto updateStock(Long productId, UpdateStockDto stockDto) {
+        try {
+            Product product = getProductById(productId);
+            StockDto existingStockDto = stockService.getStockByProductId(productId);
+            Stock existingStock = stockMapper.toStock(existingStockDto);
+            Stock updatedStock = stockMapper.toStockFromUpdateStockDto(stockDto);
+            existingStock.setQuantity(updatedStock.getQuantity());
+            existingStock.setProduct(product);
+            Stock savedStock = stockService.saveStock(existingStock);
+            return stockMapper.toStockDto(savedStock);
+        } catch (Exception e) {
+            throw new NotUpdatedException("This product cannot be updated.", e);
+        }
+    }
+
+    public void deleteStock(Long productId) {
+        try {
+            Product product = getProductById(productId);
+            stockService.deleteStock(product.getStock());
+        } catch (Exception e) {
+            logger.error("Failed to delete stock with id: {}", productId);
+            throw new NotDeletedException("Failed to delete stock with id: " + productId, e);
+        }
+    }
+
+    public void deleteStocks() {
+        try {
+            stockService.deleteAllStocks();
+        } catch (Exception e) {
+            logger.error("Failed to delete stocks");
+            throw new NotDeletedException("Failed to delete stocks");
+        }
     }
 }

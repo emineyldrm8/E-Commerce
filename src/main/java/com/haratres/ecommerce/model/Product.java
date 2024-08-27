@@ -32,6 +32,9 @@ public class Product extends BaseEntity {
     @Column(name = "price", nullable = false)
     private Double price;
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private Stock stock;
+
     @Column(name = "color", nullable = false)
     private String color;
 

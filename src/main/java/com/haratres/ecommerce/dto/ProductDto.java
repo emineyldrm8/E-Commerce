@@ -10,6 +10,7 @@ public class ProductDto {
     private String title;
     private String description;
     private Double price;
+    private StockDto stock;
     private String color;
     private String size;
 }
