@@ -1,9 +1,8 @@
 
 package com.haratres.ecommerce.mapper;
 
-import com.haratres.ecommerce.dto.CreateProductDto;
-import com.haratres.ecommerce.dto.ProductDto;
-import com.haratres.ecommerce.dto.UpdateProductDto;
+import com.haratres.ecommerce.dto.*;
+import com.haratres.ecommerce.model.Price;
 import com.haratres.ecommerce.model.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,6 +15,7 @@ public interface ProductMapper {
     ProductMapper INSTANCE = Mappers.getMapper(ProductMapper.class);
 
     ProductDto toProductDto(Product product);
+
     Product toProduct(ProductDto productDto);
 
     @Mapping(source ="price", target = "price.value")
@@ -33,4 +33,24 @@ public interface ProductMapper {
     List<ProductDto> toProductDtoList(List<Product> productList);
 
     List<Product> toProductListFromCreate(List<CreateProductDto> productDtoList);
+
+    @Mapping(target = "productId", source = "product.id")
+    PriceDto toPriceDto(Price price);
+
+    @Mapping(target = "product.id", source = "productId")
+    Price toPrice(PriceDto priceDto);
+
+    UpdatePriceDto toUpdatePriceDto(Price price);
+
+    @Mapping(target = "product", ignore = true)
+    Price toPriceFromUpdatePriceDto(UpdatePriceDto priceDto);
+
+    CreatePriceDto toCreatePriceDto(Price price);
+
+    @Mapping(target = "product", ignore = true)
+    Price toPriceFromCreatePriceDto(CreatePriceDto priceDto);
+
+    List<PriceDto> toPriceDtoList(List<Price> prices);
+
+    List<Price> toPriceList(List<PriceDto> priceDtos);
 }

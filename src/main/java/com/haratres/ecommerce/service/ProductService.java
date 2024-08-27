@@ -23,7 +23,6 @@ public class ProductService {
     private final PriceMapper priceMapper = PriceMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
-
     public ProductService(ProductRepository productRepository, PriceService priceService) {
         this.productRepository = productRepository;
         this.priceService = priceService;
@@ -142,7 +141,6 @@ public class ProductService {
             throw new NotSavedException("An error occurred while processing the price for product ID: " + productId, e);
         }
     }
-
     public PriceDto updatePrice(Long productId, UpdatePriceDto price) {
         Product product = getProductById(productId);
         if (Objects.isNull(product.getPrice())) {
@@ -150,13 +148,12 @@ public class ProductService {
         }
         Price updatedPrice = priceMapper.toPriceFromUpdatePriceDto(price);
         updatedPrice.setId(product.getPrice().getId());
-        updatedPrice.setProduct(product);
+        updatedPrice.setProduct(product);;
         updatedPrice = priceService.savePrice(updatedPrice);
         product.setPrice(updatedPrice);
         productRepository.save(product);
         return priceMapper.toPriceDto(updatedPrice);
     }
-
     public void deletePrice(Long productId) {
         try {
             Product product = getProductById(productId);
@@ -166,4 +163,5 @@ public class ProductService {
             throw new NotDeletedException("Failed to delete price with id: " + productId, e);
         }
     }
+
 }
