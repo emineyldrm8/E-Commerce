@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/products/**").permitAll()
                         .requestMatchers("/api/users/{userId}/carts").authenticated()
                         .requestMatchers("/api/users/{userId}/address").authenticated()
+                        .requestMatchers("/api/products/{id}/prices").authenticated()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsImpl)

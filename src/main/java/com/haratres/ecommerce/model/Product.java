@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Product", uniqueConstraints = {
+@Table(name = "product", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"code"})
 })
 @Getter
@@ -29,8 +29,9 @@ public class Product extends BaseEntity {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "price", nullable = false)
-    private Double price;
+    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL)
+    @Column(name="price",nullable = false)
+    private Price price;
 
     @Column(name = "color", nullable = false)
     private String color;

@@ -1,10 +1,10 @@
 package com.haratres.ecommerce.service;
 
-import com.haratres.ecommerce.dto.CreateProductDto;
-import com.haratres.ecommerce.dto.ProductDto;
-import com.haratres.ecommerce.dto.UpdateProductDto;
+import com.haratres.ecommerce.dto.*;
 import com.haratres.ecommerce.exception.*;
+import com.haratres.ecommerce.mapper.PriceMapper;
 import com.haratres.ecommerce.mapper.ProductMapper;
+import com.haratres.ecommerce.model.Price;
 import com.haratres.ecommerce.model.Product;
 import com.haratres.ecommerce.repository.ProductRepository;
 import org.slf4j.Logger;
@@ -12,16 +12,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
+    private final PriceService priceService;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
+    private final PriceMapper priceMapper = PriceMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
-    public ProductService(ProductRepository productRepository) {
+
+    public ProductService(ProductRepository productRepository, PriceService priceService) {
         this.productRepository = productRepository;
+        this.priceService = priceService;
     }
 
     public List<ProductDto> getAllProducts() {
@@ -29,7 +34,7 @@ public class ProductService {
     }
 
     public ProductDto save(CreateProductDto createProductDto) {
-        Product product = productMapper.toProduct(createProductDto);
+        Product product = productMapper.toProductFromCreateProductDto(createProductDto);
 
         if (productRepository.existsByCode(product.getCode())) {
             logger.error("Conflict occurred: Product with code {} already exists.", createProductDto.getCode());
@@ -64,7 +69,7 @@ public class ProductService {
         } catch (Exception e) {
             logger.error("Failed to save the product list: {}", createProductDtoList);
             throw new NotSavedException("Failed to save the product list: " + createProductDtoList.stream()
-                    .map(productMapper::toProduct)
+                    .map(productMapper::toProductFromCreateProductDto)
                     .collect(Collectors.toList()), e);
         }
     }
@@ -99,7 +104,7 @@ public class ProductService {
                 });
 
         try {
-            Product updatedProduct = productMapper.toProduct(updatedProductDto);
+            Product updatedProduct = productMapper.toProductFromUpdateProductDto(updatedProductDto);
             updatedProduct.setId(id);
 
             Product savedProduct = productRepository.save(updatedProduct);
@@ -121,5 +126,25 @@ public class ProductService {
                     logger.error("Product not found with id: {}", id);
                     return new NotFoundException("Product not found with id: " + id);
                 });
+    }
+
+    public PriceDto createPriceForProduct(Long productId, CreatePriceDto priceDto) {
+        Product product = getProductById(productId);
+        if (Objects.nonNull(product.getPrice())) {
+            throw new DuplicateEntryException("Product already has a price.");
+        }
+        Price price=priceMapper.toPriceFromCreatePriceDto(priceDto);
+        price.setProduct(product);
+        return priceMapper.toPriceDto(priceService.savePrice(price));
+    }
+
+    public PriceDto updatePrice(Long productId, UpdatePriceDto price) {
+        Product product = getProductById(productId);
+        if (Objects.isNull(product.getPrice())) {
+            throw new NotFoundException("Product does not have a price to update.");
+        }
+        Price updatedPrice=priceMapper.toPriceFromUpdatePriceDto(price);
+        product.setPrice(updatedPrice);
+        return priceMapper.toPriceDto(priceService.savePrice(updatedPrice));
     }
 }
