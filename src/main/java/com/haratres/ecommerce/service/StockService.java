@@ -33,10 +33,6 @@ public class StockService {
         return stockMapper.toStockDto(stock);
     }
 
-    public List<StockDto> getStocks() {
-        return stockMapper.toStockDtoList(stockRepository.findAll());
-    }
-
     public Stock saveStock(Stock stock) {
         try {
             return stockRepository.save(stock);
@@ -50,14 +46,6 @@ public class StockService {
             stockRepository.delete(stock);
         } catch (Exception e) {
             throw new NotDeletedException("Failed to delete stock", e);
-        }
-    }
-
-    public void deleteAllStocks() {
-        try {
-            stockRepository.deleteAll();
-        } catch (Exception e) {
-            throw new NotDeletedException("Failed to delete stocks", e);
         }
     }
 }

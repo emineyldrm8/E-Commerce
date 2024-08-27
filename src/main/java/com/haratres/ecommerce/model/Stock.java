@@ -19,7 +19,7 @@ public class Stock {
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
-    @OneToOne(mappedBy="stock",cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy="stock")
     @JsonIgnore
     @JoinColumn(name = "product_id", referencedColumnName = "id")
     private Product product;

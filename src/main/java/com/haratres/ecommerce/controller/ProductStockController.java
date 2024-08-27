@@ -28,11 +28,6 @@ public class ProductStockController {
         return ResponseEntity.ok(stock);
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<StockDto>> getStocks(@PathVariable Long productId) {
-        return ResponseEntity.ok(stockService.getStocks());
-    }
-
     @PostMapping
     public ResponseEntity<StockDto> createStock(@PathVariable Long productId, @RequestBody CreateStockDto stock) {
         StockDto saveStock = productService.createStockForProduct(productId, stock);
@@ -48,12 +43,6 @@ public class ProductStockController {
     @DeleteMapping
     public ResponseEntity<Void> deleteStock(@PathVariable Long productId) {
         productService.deleteStock(productId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/all")
-    public ResponseEntity<Void> deleteAllStocks() {
-        productService.deleteStocks();
         return ResponseEntity.noContent().build();
     }
 }

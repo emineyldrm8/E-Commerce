@@ -141,22 +141,19 @@ public class ProductService {
             throw new NotSavedException("An error occurred while processing the stock for product ID: " + productId, e);
         }
     }
-
-    public StockDto updateStock(Long productId, UpdateStockDto stockDto) {
-        try {
-            Product product = getProductById(productId);
-            StockDto existingStockDto = stockService.getStockByProductId(productId);
-            Stock existingStock = stockMapper.toStock(existingStockDto);
-            Stock updatedStock = stockMapper.toStockFromUpdateStockDto(stockDto);
-            existingStock.setQuantity(updatedStock.getQuantity());
-            existingStock.setProduct(product);
-            Stock savedStock = stockService.saveStock(existingStock);
-            return stockMapper.toStockDto(savedStock);
-        } catch (Exception e) {
-            throw new NotUpdatedException("This product cannot be updated.", e);
+    public StockDto updateStock(Long productId, UpdateStockDto stock) {
+        Product product = getProductById(productId);
+        if (Objects.isNull(product.getStock())) {
+            throw new NotFoundException("Product does not have a stock to update.");
         }
+        Stock updatedStock = stockMapper.toStockFromUpdateStockDto(stock);
+        updatedStock.setId(product.getStock().getId());
+        updatedStock.setProduct(product);;
+        updatedStock = stockService.saveStock(updatedStock);
+        product.setStock(updatedStock);
+        productRepository.save(product);
+        return stockMapper.toStockDto(updatedStock);
     }
-
     public void deleteStock(Long productId) {
         try {
             Product product = getProductById(productId);
@@ -167,12 +164,4 @@ public class ProductService {
         }
     }
 
-    public void deleteStocks() {
-        try {
-            stockService.deleteAllStocks();
-        } catch (Exception e) {
-            logger.error("Failed to delete stocks");
-            throw new NotDeletedException("Failed to delete stocks");
-        }
-    }
 }
