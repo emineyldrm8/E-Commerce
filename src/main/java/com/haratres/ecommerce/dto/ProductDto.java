@@ -7,6 +7,7 @@ public class ProductDto {
     private Long id;
     private String code;
     private String name;
+    private String code;
     private String title;
     private String description;
     private Double price;
