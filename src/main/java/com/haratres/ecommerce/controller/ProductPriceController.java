@@ -23,27 +23,27 @@ public class ProductPriceController {
         this.priceService = priceService;
         this.productService = productService;
     }
-    //one to one oldugu için her pricein bir idsi var gerek yok,
-    @GetMapping //ok
+
+    @GetMapping
     public ResponseEntity<PriceDto> getPrice(@PathVariable Long productId) {
         PriceDto price = priceService.getPriceByProductId(productId);
         return ResponseEntity.ok(price);
     }
 
-    @GetMapping("/all") //tarıka sor isimlndirne ve gerk var mı
+    @GetMapping("/all")
     public ResponseEntity<List<PriceDto>> getPrices(@PathVariable Long productId) {
         return ResponseEntity.ok(priceService.getPrices());
     }
 
-    @PostMapping //bu biiti
+    @PostMapping
     public ResponseEntity<PriceDto> createPrice(@PathVariable Long productId, @RequestBody CreatePriceDto price) {
-        PriceDto savePrice = productService.createPriceForProduct(productId,price);
+        PriceDto savePrice = productService.createPriceForProduct(productId, price);
         return new ResponseEntity<>(savePrice, HttpStatus.CREATED);
     }
 
     @PutMapping
     public ResponseEntity<PriceDto> updatePrice(@PathVariable Long productId, @RequestBody UpdatePriceDto price) {
-        PriceDto updatedPrice=productService.updatePrice(productId,price);
+        PriceDto updatedPrice = productService.updatePrice(productId, price);
         return ResponseEntity.ok(updatedPrice);
     }
 

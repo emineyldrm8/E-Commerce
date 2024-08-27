@@ -22,20 +22,19 @@ public interface PriceMapper {
     @Mapping(target = "product.id", source = "productId")
     Price toPrice(PriceDto priceDto);
 
-   // @Mapping(target = "productId", source = "product.id")
     UpdatePriceDto toUpdatePriceDto(Price price);
 
-  //  @Mapping(target = "product.id", source = "productId")
+    @Mapping(target = "product", ignore = true)
     Price toPriceFromUpdatePriceDto(UpdatePriceDto priceDto);
 
-   // @Mapping(target = "productId", source = "product.id")
     CreatePriceDto toCreatePriceDto(Price price);
 
-    //@Mapping(target = "product.id", source = "productId")
+    @Mapping(target = "product", ignore = true)
     Price toPriceFromCreatePriceDto(CreatePriceDto priceDto);
 
     List<PriceDto> toPriceDtoList(List<Price> prices);
 
     List<Price> toPriceList(List<PriceDto> priceDtos);
+
 
 }

@@ -29,7 +29,7 @@ public class Product extends BaseEntity {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private Price price;
 
     @Column(name = "color", nullable = false)
