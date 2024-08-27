@@ -39,10 +39,6 @@ public class PriceService {
         return priceMapper.toPriceDto(price);
     }
 
-    public List<PriceDto> getPrices() {
-        return priceMapper.toPriceDtoList(priceRepository.findAll());
-    }
-
     public Price savePrice(Price price) {
         try{
             return priceRepository.save(price);
@@ -56,16 +52,6 @@ public class PriceService {
     public void deletePrice(Price price) {
         try{
             priceRepository.delete(price);
-        }
-        catch(Exception e)
-        {
-            throw new NotDeletedException("Failed to delete price", e);
-        }
-    }
-
-    public void deleteAllPrices() {
-        try{
-            priceRepository.deleteAll();
         }
         catch(Exception e)
         {

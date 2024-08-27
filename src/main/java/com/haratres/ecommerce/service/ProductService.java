@@ -131,10 +131,10 @@ public class ProductService {
         try {
             Product product = getProductById(productId);
             Price existingPrice = product.getPrice();
-            if (Objects.equals(existingPrice.getValue(), 0.0)) {
+            if (Objects.equals(existingPrice.getValue(), 0)) {
                 existingPrice.setValue(priceDto.getValue());
             } else {
-                throw new NotSavedException("This product already has a price. You cannot create another one.");
+                throw new NotSavedException("This product already has price. You cannot create another one.");
             }
             Price updatedPrice = priceService.savePrice(existingPrice);
             return priceMapper.toPriceDto(updatedPrice);
@@ -143,20 +143,18 @@ public class ProductService {
         }
     }
 
-
-    public PriceDto updatePrice(Long productId, UpdatePriceDto priceDto) {
-        try {
-            Product product = getProductById(productId);
-            PriceDto existingPriceDto = priceService.getPriceByProductId(productId);
-            Price existingPrice = priceMapper.toPrice(existingPriceDto);
-            Price updatedPrice = priceMapper.toPriceFromUpdatePriceDto(priceDto);
-            existingPrice.setValue(updatedPrice.getValue());
-            existingPrice.setProduct(product);
-            Price savedPrice = priceService.savePrice(existingPrice);
-            return priceMapper.toPriceDto(savedPrice);
-        } catch (Exception e) {
-            throw new NotUpdatedException("This product cannot be updated.", e);
+    public PriceDto updatePrice(Long productId, UpdatePriceDto price) {
+        Product product = getProductById(productId);
+        if (Objects.isNull(product.getPrice())) {
+            throw new NotFoundException("Product does not have a price to update.");
         }
+        Price updatedPrice = priceMapper.toPriceFromUpdatePriceDto(price);
+        updatedPrice.setId(product.getPrice().getId());
+        updatedPrice.setProduct(product);
+        updatedPrice = priceService.savePrice(updatedPrice);
+        product.setPrice(updatedPrice);
+        productRepository.save(product);
+        return priceMapper.toPriceDto(updatedPrice);
     }
 
     public void deletePrice(Long productId) {
@@ -168,15 +166,4 @@ public class ProductService {
             throw new NotDeletedException("Failed to delete price with id: " + productId, e);
         }
     }
-
-    public void deletePrices() {
-        try {
-            priceService.deleteAllPrices();
-        } catch (Exception e) {
-            logger.error("Failed to delete prices");
-            throw new NotDeletedException("Failed to delete prices");
-        }
-    }
-
-
 }

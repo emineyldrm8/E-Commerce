@@ -30,11 +30,6 @@ public class ProductPriceController {
         return ResponseEntity.ok(price);
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<PriceDto>> getPrices(@PathVariable Long productId) {
-        return ResponseEntity.ok(priceService.getPrices());
-    }
-
     @PostMapping
     public ResponseEntity<PriceDto> createPrice(@PathVariable Long productId, @RequestBody CreatePriceDto price) {
         PriceDto savePrice = productService.createPriceForProduct(productId, price);
@@ -50,12 +45,6 @@ public class ProductPriceController {
     @DeleteMapping
     public ResponseEntity<Void> deletePrice(@PathVariable Long productId) {
         productService.deletePrice(productId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/all")
-    public ResponseEntity<Void> deleteAllPrices() {
-        productService.deletePrices();
         return ResponseEntity.noContent().build();
     }
 }
