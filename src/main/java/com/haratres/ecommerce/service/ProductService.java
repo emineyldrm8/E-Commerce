@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -30,15 +31,9 @@ public class ProductService {
     private EntityManager entityManager;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
-    public Page<ProductDto> getAllProducts(PageRequestDto dto) {
-        List<String> validColumns = getValidSortColumns();
-        if (!validColumns.contains(dto.getSortByColumn())) {
-            logger.error("Invalid sort column: {}" ,dto.getSortByColumn());
-            throw new NotFoundException("Invalid sort column: " + dto.getSortByColumn());
-        }
-        Pageable pageable = dto.getPageable(dto);
-        Page<Product> productPage = productRepository.findAll(pageable);
-        return productPage.map(productMapper::toProductDto);
+
+    public List<ProductDto> getAllProducts() {
+        return productMapper.toProductDtoList(productRepository.findAll());
     }
 
     public ProductDto save(CreateProductDto createProductDto) {
@@ -124,7 +119,8 @@ public class ProductService {
         }
     }
 
-    public List<ProductDto> searchProducts(String text) {
+    public  Page<ProductDto> searchProducts(PageRequestDto dto,String text) {
+        Pageable pageable = dto.getPageable(dto);
         String cleanedText = text.trim().toLowerCase();
         List<String> keywords = Arrays.asList(cleanedText.split("\\s+"));
         List<Product> products = productRepository.findByCodeIgnoreCaseOrNameIgnoreCase(cleanedText, cleanedText);
@@ -132,7 +128,11 @@ public class ProductService {
             products.addAll(productRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(keyword, keyword));
         }
         List<Product> uniqueProducts = products.stream().distinct().collect(Collectors.toList());
-        return productMapper.toProductDtoList(uniqueProducts);
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), uniqueProducts.size());
+        List<Product> pagedProducts = uniqueProducts.subList(start, end);
+        Page<Product> productPage = new PageImpl<>(pagedProducts, pageable, uniqueProducts.size());
+        return productPage.map(productMapper::toProductDto);
     }
 
 

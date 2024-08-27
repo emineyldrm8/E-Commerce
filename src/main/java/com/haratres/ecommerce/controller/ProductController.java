@@ -27,14 +27,8 @@ public class ProductController {
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
 
     @GetMapping
-    public ResponseEntity<Page<ProductDto>> getAllProducts(
-            @RequestParam(name = "page") int pageNumber,
-            @RequestParam(name = "size") int pageSize,
-            @RequestParam(name = "sort") Sort.Direction sort,
-            @RequestParam(name = "sortBy") String sortByColumn){
-        PageRequestDto dto = new PageRequestDto(pageNumber,pageSize,sort,sortByColumn);
-        Page<ProductDto> productPage = productService.getAllProducts(dto);
-        return ResponseEntity.ok(productPage);
+    public ResponseEntity<List<ProductDto>> getAllProducts(){
+        return ResponseEntity.ok(productService.getAllProducts());
     }
 
     @GetMapping("/{id}")
@@ -43,8 +37,14 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<ProductDto>> searchProducts(@RequestParam(name = "query")  String text) {
-        return ResponseEntity.ok(productService.searchProducts(text));
+    public ResponseEntity<Page<ProductDto>> searchProducts( @RequestParam(name = "page") int pageNumber,
+                                                            @RequestParam(name = "size") int pageSize,
+                                                            @RequestParam(name = "sort") Sort.Direction sort,
+                                                            @RequestParam(name = "sortBy") String sortByColumn,
+                                                            @RequestParam(name = "query")  String text) {
+        PageRequestDto dto = new PageRequestDto(pageNumber,pageSize,sort,sortByColumn);
+        Page<ProductDto> productPage = productService.searchProducts(dto,text);
+        return ResponseEntity.ok(productPage);
     }
 
     @PostMapping
