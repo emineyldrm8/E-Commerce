@@ -2,7 +2,6 @@ package com.haratres.ecommerce.mapper;
 
 import com.haratres.ecommerce.dto.CreatePriceDto;
 import com.haratres.ecommerce.dto.PriceDto;
-import com.haratres.ecommerce.dto.ProductDto;
 import com.haratres.ecommerce.dto.UpdatePriceDto;
 import com.haratres.ecommerce.model.Price;
 import org.mapstruct.Mapper;
@@ -35,6 +34,4 @@ public interface PriceMapper {
     List<PriceDto> toPriceDtoList(List<Price> prices);
 
     List<Price> toPriceList(List<PriceDto> priceDtos);
-
-
 }
