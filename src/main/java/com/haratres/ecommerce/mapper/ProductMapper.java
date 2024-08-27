@@ -34,23 +34,4 @@ public interface ProductMapper {
 
     List<Product> toProductListFromCreate(List<CreateProductDto> productDtoList);
 
-    @Mapping(target = "productId", source = "product.id")
-    PriceDto toPriceDto(Price price);
-
-    @Mapping(target = "product.id", source = "productId")
-    Price toPrice(PriceDto priceDto);
-
-    UpdatePriceDto toUpdatePriceDto(Price price);
-
-    @Mapping(target = "product", ignore = true)
-    Price toPriceFromUpdatePriceDto(UpdatePriceDto priceDto);
-
-    CreatePriceDto toCreatePriceDto(Price price);
-
-    @Mapping(target = "product", ignore = true)
-    Price toPriceFromCreatePriceDto(CreatePriceDto priceDto);
-
-    List<PriceDto> toPriceDtoList(List<Price> prices);
-
-    List<Price> toPriceList(List<PriceDto> priceDtos);
 }
