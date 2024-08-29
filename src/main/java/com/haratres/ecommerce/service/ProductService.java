@@ -28,7 +28,7 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
     @Autowired
-    private EntityManager entityManager;
+    private PaginationService paginationService;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
@@ -120,7 +120,7 @@ public class ProductService {
     }
 
     public  Page<ProductDto> searchProducts(PageRequestDto dto,String text) {
-        Pageable pageable = dto.getPageable(dto);
+        Pageable pageable = paginationService.getPageable(dto);
         String cleanedText = text.trim().toLowerCase();
         List<String> keywords = Arrays.asList(cleanedText.split("\\s+"));
         List<Product> products = productRepository.findByCodeIgnoreCaseOrNameIgnoreCase(cleanedText, cleanedText);
@@ -148,11 +148,4 @@ public class ProductService {
                 });
     }
 
-    private List<String> getValidSortColumns() {
-        Metamodel metamodel = entityManager.getMetamodel();
-        EntityType<Product> entityType = metamodel.entity(Product.class);
-        return entityType.getAttributes().stream()
-                .map(attribute -> attribute.getName())
-                .collect(Collectors.toList());
-    }
 }

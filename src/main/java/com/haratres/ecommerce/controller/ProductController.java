@@ -27,7 +27,7 @@ public class ProductController {
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
 
     @GetMapping
-    public ResponseEntity<List<ProductDto>> getAllProducts(){
+    public ResponseEntity<List<ProductDto>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
@@ -37,13 +37,14 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<ProductDto>> searchProducts( @RequestParam(name = "page") int pageNumber,
-                                                            @RequestParam(name = "size") int pageSize,
-                                                            @RequestParam(name = "sort") Sort.Direction sort,
-                                                            @RequestParam(name = "sortBy") String sortByColumn,
-                                                            @RequestParam(name = "query")  String text) {
-        PageRequestDto dto = new PageRequestDto(pageNumber,pageSize,sort,sortByColumn);
-        Page<ProductDto> productPage = productService.searchProducts(dto,text);
+    public ResponseEntity<Page<ProductDto>> searchProducts(@RequestParam(name = "page", defaultValue = "0") int pageNumber,
+                                                           @RequestParam(name = "size", defaultValue = "10") int pageSize,
+                                                           @RequestParam(name = "sort", defaultValue = "ASC") String sortDirection,
+                                                           @RequestParam(name = "sortBy", defaultValue = "id") String sortByColumn,
+                                                           @RequestParam(name = "query") String text) {
+        Sort.Direction sort = Sort.Direction.fromString(sortDirection);
+        PageRequestDto dto = new PageRequestDto(pageNumber, pageSize, sort, sortByColumn);
+        Page<ProductDto> productPage = productService.searchProducts(dto, text);
         return ResponseEntity.ok(productPage);
     }
 
