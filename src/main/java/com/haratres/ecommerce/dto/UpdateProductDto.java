@@ -8,7 +8,7 @@ public class UpdateProductDto {
     private String code;
     private String title;
     private String description;
-    private Double price;
+    private double price;
     private int stock;
     private String color;
     private String size;

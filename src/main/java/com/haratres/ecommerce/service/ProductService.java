@@ -1,16 +1,24 @@
 package com.haratres.ecommerce.service;
 
 import com.haratres.ecommerce.dto.*;
+import com.haratres.ecommerce.dto.CreateProductDto;
+import com.haratres.ecommerce.dto.PageRequestDto;
+import com.haratres.ecommerce.dto.ProductDto;
+import com.haratres.ecommerce.dto.UpdateProductDto;
 import com.haratres.ecommerce.exception.*;
-import com.haratres.ecommerce.mapper.StockMapper;
+import com.haratres.ecommerce.mapper.PriceMapper;
 import com.haratres.ecommerce.mapper.ProductMapper;
-import com.haratres.ecommerce.model.Stock;
+import com.haratres.ecommerce.model.Price;
 import com.haratres.ecommerce.model.Product;
 import com.haratres.ecommerce.repository.ProductRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -19,17 +27,33 @@ import java.util.stream.Collectors;
 public class ProductService {
     private final ProductRepository productRepository;
     private final StockService stockService;
+    private final PaginationService paginationService;
+    private final PriceService priceService;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
     private final StockMapper stockMapper = StockMapper.INSTANCE;
+    private final PriceMapper priceMapper = PriceMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     public ProductService(ProductRepository productRepository, StockService stockService) {
+    public ProductService(ProductRepository productRepository, PaginationService paginationService, PriceService priceService) {
         this.productRepository = productRepository;
         this.stockService = stockService;
+        this.paginationService = paginationService;
+        this.priceService = priceService;
     }
 
     public List<ProductDto> getAllProducts() {
         return productMapper.toProductDtoList(productRepository.findAll());
+    }
+    public Page<ProductDto> getAllProducts(PageRequestDto dto) {
+        List<String> validColumns = paginationService.getValidSortColumns(Product.class);
+        if (!validColumns.contains(dto.getSortByColumn())) {
+            logger.error("Invalid sort column: {}" ,dto.getSortByColumn());
+            throw new NotFoundException("Invalid sort column: " + dto.getSortByColumn());
+        }
+        Pageable pageable = paginationService.getPageable(dto);
+        Page<Product> productPage = productRepository.findAll(pageable);
+        return productPage.map(productMapper::toProductDto);
     }
 
     public ProductDto save(CreateProductDto createProductDto) {
@@ -114,6 +138,23 @@ public class ProductService {
         }
     }
 
+    public  Page<ProductDto> searchProducts(PageRequestDto dto,String text) {
+        Pageable pageable = paginationService.getPageable(dto);
+        String cleanedText = text.trim().toLowerCase();
+        List<String> keywords = Arrays.asList(cleanedText.split("\\s+"));
+        List<Product> products = productRepository.findByCodeIgnoreCaseOrNameIgnoreCase(cleanedText, cleanedText);
+        for (String keyword : keywords) {
+            products.addAll(productRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(keyword, keyword));
+        }
+        List<Product> uniqueProducts = products.stream().distinct().collect(Collectors.toList());
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), uniqueProducts.size());
+        List<Product> pagedProducts = uniqueProducts.subList(start, end);
+        Page<Product> productPage = new PageImpl<>(pagedProducts, pageable, uniqueProducts.size());
+        return productPage.map(productMapper::toProductDto);
+    }
+
+
     public boolean productCodeExists(String code) {
         return productRepository.existsByCode(code);
     }
@@ -161,6 +202,45 @@ public class ProductService {
         } catch (Exception e) {
             logger.error("Failed to delete stock with id: {}", productId);
             throw new NotDeletedException("Failed to delete stock with id: " + productId, e);
+        }
+    }
+
+
+    public PriceDto createPriceForProduct(Long productId, CreatePriceDto priceDto) {
+        try {
+            Product product = getProductById(productId);
+            Price existingPrice = product.getPrice();
+            if (Objects.equals(existingPrice.getValue(), 0)) {
+                existingPrice.setValue(priceDto.getValue());
+            } else {
+                throw new NotSavedException("This product already has price. You cannot create another one.");
+            }
+            Price updatedPrice = priceService.savePrice(existingPrice);
+            return priceMapper.toPriceDto(updatedPrice);
+        } catch (Exception e) {
+            throw new NotSavedException("An error occurred while processing the price for product ID: " + productId, e);
+        }
+    }
+    public PriceDto updatePrice(Long productId, UpdatePriceDto price) {
+        Product product = getProductById(productId);
+        if (Objects.isNull(product.getPrice())) {
+            throw new NotFoundException("Product does not have a price to update.");
+        }
+        Price updatedPrice = priceMapper.toPriceFromUpdatePriceDto(price);
+        updatedPrice.setId(product.getPrice().getId());
+        updatedPrice.setProduct(product);;
+        updatedPrice = priceService.savePrice(updatedPrice);
+        product.setPrice(updatedPrice);
+        productRepository.save(product);
+        return priceMapper.toPriceDto(updatedPrice);
+    }
+    public void deletePrice(Long productId) {
+        try {
+            Product product = getProductById(productId);
+            priceService.deletePrice(product.getPrice());
+        } catch (Exception e) {
+            logger.error("Failed to delete price with id: {}", productId);
+            throw new NotDeletedException("Failed to delete price with id: " + productId, e);
         }
     }
 

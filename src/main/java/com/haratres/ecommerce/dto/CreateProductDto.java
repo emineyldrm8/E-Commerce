@@ -7,8 +7,8 @@ public class CreateProductDto {
     private String code;
     private String title;
     private String description;
-    private Double price;
     private int stock;
+    private double price;
     private String color;
     private String size;
 }

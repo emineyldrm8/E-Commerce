@@ -4,6 +4,7 @@ import com.haratres.ecommerce.filter.JwtAuthenticationFilter;
 import com.haratres.ecommerce.service.UserDetailsImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -34,10 +35,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                        .requestMatchers("/api/products/**").permitAll()
-                        .requestMatchers("/api/users/{userId}/carts").authenticated()
-                        .requestMatchers("/api/users/{userId}/address").authenticated()
-                        .requestMatchers("/api/products/{id}/stocks").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/products/*").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/products/{productId}/prices").permitAll()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsImpl)
