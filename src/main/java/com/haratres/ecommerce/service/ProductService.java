@@ -31,9 +31,15 @@ public class ProductService {
     private PaginationService paginationService;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
-
-    public List<ProductDto> getAllProducts() {
-        return productMapper.toProductDtoList(productRepository.findAll());
+    public Page<ProductDto> getAllProducts(PageRequestDto dto) {
+        List<String> validColumns = paginationService.getValidSortColumns(Product.class);
+        if (!validColumns.contains(dto.getSortByColumn())) {
+            logger.error("Invalid sort column: {}" ,dto.getSortByColumn());
+            throw new NotFoundException("Invalid sort column: " + dto.getSortByColumn());
+        }
+        Pageable pageable = paginationService.getPageable(dto);
+        Page<Product> productPage = productRepository.findAll(pageable);
+        return productPage.map(productMapper::toProductDto);
     }
 
     public ProductDto save(CreateProductDto createProductDto) {
@@ -147,5 +153,4 @@ public class ProductService {
                     return new NotFoundException("Product not found with id: " + id);
                 });
     }
-
 }
