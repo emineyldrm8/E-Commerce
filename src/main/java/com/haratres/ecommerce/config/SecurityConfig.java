@@ -4,6 +4,7 @@ import com.haratres.ecommerce.filter.JwtAuthenticationFilter;
 import com.haratres.ecommerce.service.UserDetailsImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -30,13 +31,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
+        return http  //cart için bir şey ekleme //addres için de
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                        .requestMatchers("/api/products/**").permitAll()
-                        .requestMatchers("/api/users/{userId}/carts").authenticated()
-                        .requestMatchers("/api/users/{userId}/address").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/products/*").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/products/{productId}/prices").permitAll()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsImpl)

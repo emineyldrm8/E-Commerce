@@ -1,19 +1,18 @@
 package com.haratres.ecommerce.service;
 
+import com.haratres.ecommerce.dto.*;
 import com.haratres.ecommerce.dto.CreateProductDto;
 import com.haratres.ecommerce.dto.PageRequestDto;
 import com.haratres.ecommerce.dto.ProductDto;
 import com.haratres.ecommerce.dto.UpdateProductDto;
 import com.haratres.ecommerce.exception.*;
+import com.haratres.ecommerce.mapper.PriceMapper;
 import com.haratres.ecommerce.mapper.ProductMapper;
+import com.haratres.ecommerce.model.Price;
 import com.haratres.ecommerce.model.Product;
 import com.haratres.ecommerce.repository.ProductRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.Metamodel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -21,16 +20,27 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
-    @Autowired
-    private ProductRepository productRepository;
-    @Autowired
-    private PaginationService paginationService;
+    private final ProductRepository productRepository;
+    private final PaginationService paginationService;
+    private final PriceService priceService;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
+    private final PriceMapper priceMapper = PriceMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
+
+    public ProductService(ProductRepository productRepository, PaginationService paginationService, PriceService priceService) {
+        this.productRepository = productRepository;
+        this.paginationService = paginationService;
+        this.priceService = priceService;
+    }
+
+    public List<ProductDto> getAllProducts() {
+        return productMapper.toProductDtoList(productRepository.findAll());
+    }
     public Page<ProductDto> getAllProducts(PageRequestDto dto) {
         List<String> validColumns = paginationService.getValidSortColumns(Product.class);
         if (!validColumns.contains(dto.getSortByColumn())) {
@@ -43,7 +53,7 @@ public class ProductService {
     }
 
     public ProductDto save(CreateProductDto createProductDto) {
-        Product product = productMapper.toProduct(createProductDto);
+        Product product = productMapper.toProductFromCreateProductDto(createProductDto);
 
         if (productRepository.existsByCode(product.getCode())) {
             logger.error("Conflict occurred: Product with code {} already exists.", createProductDto.getCode());
@@ -78,7 +88,7 @@ public class ProductService {
         } catch (Exception e) {
             logger.error("Failed to save the product list: {}", createProductDtoList);
             throw new NotSavedException("Failed to save the product list: " + createProductDtoList.stream()
-                    .map(productMapper::toProduct)
+                    .map(productMapper::toProductFromCreateProductDto)
                     .collect(Collectors.toList()), e);
         }
     }
@@ -111,9 +121,8 @@ public class ProductService {
                     logger.error("Product not found with id: {}", id);
                     return new NotFoundException("Product not found with id: " + id);
                 });
-
         try {
-            Product updatedProduct = productMapper.toProduct(updatedProductDto);
+            Product updatedProduct = productMapper.toProductFromUpdateProductDto(updatedProductDto);
             updatedProduct.setId(id);
 
             Product savedProduct = productRepository.save(updatedProduct);
@@ -153,4 +162,43 @@ public class ProductService {
                     return new NotFoundException("Product not found with id: " + id);
                 });
     }
+
+    public PriceDto createPriceForProduct(Long productId, CreatePriceDto priceDto) {
+        try {
+            Product product = getProductById(productId);
+            Price existingPrice = product.getPrice();
+            if (Objects.equals(existingPrice.getValue(), 0)) {
+                existingPrice.setValue(priceDto.getValue());
+            } else {
+                throw new NotSavedException("This product already has price. You cannot create another one.");
+            }
+            Price updatedPrice = priceService.savePrice(existingPrice);
+            return priceMapper.toPriceDto(updatedPrice);
+        } catch (Exception e) {
+            throw new NotSavedException("An error occurred while processing the price for product ID: " + productId, e);
+        }
+    }
+    public PriceDto updatePrice(Long productId, UpdatePriceDto price) {
+        Product product = getProductById(productId);
+        if (Objects.isNull(product.getPrice())) {
+            throw new NotFoundException("Product does not have a price to update.");
+        }
+        Price updatedPrice = priceMapper.toPriceFromUpdatePriceDto(price);
+        updatedPrice.setId(product.getPrice().getId());
+        updatedPrice.setProduct(product);;
+        updatedPrice = priceService.savePrice(updatedPrice);
+        product.setPrice(updatedPrice);
+        productRepository.save(product);
+        return priceMapper.toPriceDto(updatedPrice);
+    }
+    public void deletePrice(Long productId) {
+        try {
+            Product product = getProductById(productId);
+            priceService.deletePrice(product.getPrice());
+        } catch (Exception e) {
+            logger.error("Failed to delete price with id: {}", productId);
+            throw new NotDeletedException("Failed to delete price with id: " + productId, e);
+        }
+    }
+
 }
