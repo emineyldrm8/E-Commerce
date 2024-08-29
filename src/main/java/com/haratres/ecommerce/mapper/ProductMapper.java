@@ -14,11 +14,11 @@ import java.util.List;
 public interface ProductMapper {
     ProductMapper INSTANCE= Mappers.getMapper(ProductMapper.class);
 
-    @Mapping(target = "stock.quantity", source = "stock")
-    @Mapping(target = "price.value", source = "price")
-    ProductDto toProductDto(Product product);
     @Mapping(target = "stock", source = "stock.quantity")
     @Mapping(target = "price", source = "price.value")
+    ProductDto toProductDto(Product product);
+    @Mapping(target = "stock.quantity", source = "stock")
+    @Mapping(target = "price.value", source = "price")
     Product toProduct(ProductDto productDto);
 
     @Mapping(target = "stock", source = "stock.quantity")
