@@ -1,26 +1,41 @@
 package com.haratres.ecommerce.service;
 
 import com.haratres.ecommerce.dto.*;
+import com.haratres.ecommerce.dto.CreateProductDto;
+import com.haratres.ecommerce.dto.PageRequestDto;
+import com.haratres.ecommerce.dto.ProductDto;
+import com.haratres.ecommerce.dto.UpdateProductDto;
 import com.haratres.ecommerce.exception.*;
 import com.haratres.ecommerce.mapper.PriceMapper;
 import com.haratres.ecommerce.mapper.ProductMapper;
 import com.haratres.ecommerce.model.Price;
 import com.haratres.ecommerce.model.Product;
 import com.haratres.ecommerce.repository.ProductRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Metamodel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
+    @Autowired
+    private ProductRepository productRepository;
+    @Autowired
+    private PaginationService paginationService;
     private final ProductRepository productRepository;
     private final PriceService priceService;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
-    private final PriceMapper priceMapper = PriceMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     public ProductService(ProductRepository productRepository, PriceService priceService) {
@@ -30,6 +45,15 @@ public class ProductService {
 
     public List<ProductDto> getAllProducts() {
         return productMapper.toProductDtoList(productRepository.findAll());
+    public Page<ProductDto> getAllProducts(PageRequestDto dto) {
+        List<String> validColumns = paginationService.getValidSortColumns(Product.class);
+        if (!validColumns.contains(dto.getSortByColumn())) {
+            logger.error("Invalid sort column: {}" ,dto.getSortByColumn());
+            throw new NotFoundException("Invalid sort column: " + dto.getSortByColumn());
+        }
+        Pageable pageable = paginationService.getPageable(dto);
+        Page<Product> productPage = productRepository.findAll(pageable);
+        return productPage.map(productMapper::toProductDto);
     }
 
     public ProductDto save(CreateProductDto createProductDto) {
@@ -114,6 +138,23 @@ public class ProductService {
         }
     }
 
+    public  Page<ProductDto> searchProducts(PageRequestDto dto,String text) {
+        Pageable pageable = paginationService.getPageable(dto);
+        String cleanedText = text.trim().toLowerCase();
+        List<String> keywords = Arrays.asList(cleanedText.split("\\s+"));
+        List<Product> products = productRepository.findByCodeIgnoreCaseOrNameIgnoreCase(cleanedText, cleanedText);
+        for (String keyword : keywords) {
+            products.addAll(productRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(keyword, keyword));
+        }
+        List<Product> uniqueProducts = products.stream().distinct().collect(Collectors.toList());
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), uniqueProducts.size());
+        List<Product> pagedProducts = uniqueProducts.subList(start, end);
+        Page<Product> productPage = new PageImpl<>(pagedProducts, pageable, uniqueProducts.size());
+        return productPage.map(productMapper::toProductDto);
+    }
+
+
     public boolean productCodeExists(String code) {
         return productRepository.existsByCode(code);
     }
@@ -164,4 +205,5 @@ public class ProductService {
         }
     }
 
+}
 }

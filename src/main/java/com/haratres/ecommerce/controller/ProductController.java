@@ -1,11 +1,15 @@
 package com.haratres.ecommerce.controller;
 
 import com.haratres.ecommerce.dto.CreateProductDto;
+import com.haratres.ecommerce.dto.PageRequestDto;
 import com.haratres.ecommerce.dto.ProductDto;
 import com.haratres.ecommerce.dto.UpdateProductDto;
 import com.haratres.ecommerce.mapper.ProductMapper;
 import com.haratres.ecommerce.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,13 +27,32 @@ public class ProductController {
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
 
     @GetMapping
-    public ResponseEntity<List<ProductDto>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<Page<ProductDto>> getAllProducts(
+            @RequestParam(name = "page", defaultValue = "0") int pageNumber,
+            @RequestParam(name = "size", defaultValue = "10") int pageSize,
+            @RequestParam(name = "sort", defaultValue = "ASC") String sortDirection,
+            @RequestParam(name = "sortBy", defaultValue = "id") String sortByColumn) {
+        Sort.Direction sort = Sort.Direction.fromString(sortDirection);
+        PageRequestDto dto = new PageRequestDto(pageNumber, pageSize, sort, sortByColumn);
+        Page<ProductDto> productPage = productService.getAllProducts(dto);
+        return ResponseEntity.ok(productPage);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductDto> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductDtoById(id));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<ProductDto>> searchProducts(@RequestParam(name = "page", defaultValue = "0") int pageNumber,
+                                                           @RequestParam(name = "size", defaultValue = "10") int pageSize,
+                                                           @RequestParam(name = "sort", defaultValue = "ASC") String sortDirection,
+                                                           @RequestParam(name = "sortBy", defaultValue = "id") String sortByColumn,
+                                                           @RequestParam(name = "query") String text) {
+        Sort.Direction sort = Sort.Direction.fromString(sortDirection);
+        PageRequestDto dto = new PageRequestDto(pageNumber, pageSize, sort, sortByColumn);
+        Page<ProductDto> productPage = productService.searchProducts(dto, text);
+        return ResponseEntity.ok(productPage);
     }
 
     @PostMapping
