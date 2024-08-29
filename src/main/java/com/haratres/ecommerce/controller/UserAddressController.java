@@ -1,4 +1,5 @@
 package com.haratres.ecommerce.controller;
+
 import com.haratres.ecommerce.dto.AddressDto;
 import com.haratres.ecommerce.dto.CreateAddressDto;
 import com.haratres.ecommerce.dto.UpdateAddressDto;
@@ -14,15 +15,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users/{userId}/addresses")
-public class AddressController {
-    private final Logger logger= LoggerFactory.getLogger(AddressController.class);
+public class UserAddressController {
+    private final Logger logger = LoggerFactory.getLogger(UserAddressController.class);
     private final AddressService addressService;
-    private final AddressRepository addressRepository;
 
-    public AddressController(AddressService addressService,
-                             AddressRepository addressRepository) {
+    public UserAddressController(AddressService addressService) {
         this.addressService = addressService;
-        this.addressRepository = addressRepository;
     }
 
     @GetMapping("/{addressId}")
@@ -38,14 +36,14 @@ public class AddressController {
     }
 
     @PostMapping
-    public ResponseEntity<AddressDto> createAdress(@PathVariable Long userId,@RequestBody CreateAddressDto addressDto) {
-        AddressDto saveAddress=addressService.saveAddress(userId, addressDto);
+    public ResponseEntity<AddressDto> createAdress(@PathVariable Long userId, @RequestBody CreateAddressDto addressDto) {
+        AddressDto saveAddress = addressService.saveAddress(userId, addressDto);
         return new ResponseEntity<>(saveAddress, HttpStatus.CREATED);
     }
 
     @PutMapping("/{addressId}")
-    public ResponseEntity<AddressDto>  updateAddress(@PathVariable Long userId,@PathVariable Long addressId,@RequestBody UpdateAddressDto addressDto) {
-        AddressDto updatedAddress = addressService.updateAddress(userId, addressId,addressDto);
+    public ResponseEntity<AddressDto> updateAddress(@PathVariable Long userId, @PathVariable Long addressId, @RequestBody UpdateAddressDto addressDto) {
+        AddressDto updatedAddress = addressService.updateAddress(userId, addressId, addressDto);
         return ResponseEntity.ok(updatedAddress);
     }
 
