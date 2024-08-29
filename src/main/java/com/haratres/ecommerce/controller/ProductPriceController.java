@@ -8,6 +8,7 @@ import com.haratres.ecommerce.service.PriceService;
 import com.haratres.ecommerce.service.ProductService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,18 +32,21 @@ public class ProductPriceController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<PriceDto> createPrice(@PathVariable Long productId, @RequestBody CreatePriceDto price) {
         PriceDto savePrice = productService.createPriceForProduct(productId, price);
         return new ResponseEntity<>(savePrice, HttpStatus.CREATED);
     }
 
     @PutMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<PriceDto> updatePrice(@PathVariable Long productId, @RequestBody UpdatePriceDto price) {
         PriceDto updatedPrice = productService.updatePrice(productId, price);
         return ResponseEntity.ok(updatedPrice);
     }
 
     @DeleteMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> deletePrice(@PathVariable Long productId) {
         productService.deletePrice(productId);
         return ResponseEntity.noContent().build();
