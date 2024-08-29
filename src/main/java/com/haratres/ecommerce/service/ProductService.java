@@ -15,9 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -122,6 +124,23 @@ public class ProductService {
             throw new NotUpdatedException("Failed to update the product with id: " + id, e);
         }
     }
+
+    public  Page<ProductDto> searchProducts(PageRequestDto dto,String text) {
+        Pageable pageable = paginationService.getPageable(dto);
+        String cleanedText = text.trim().toLowerCase();
+        List<String> keywords = Arrays.asList(cleanedText.split("\\s+"));
+        List<Product> products = productRepository.findByCodeIgnoreCaseOrNameIgnoreCase(cleanedText, cleanedText);
+        for (String keyword : keywords) {
+            products.addAll(productRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(keyword, keyword));
+        }
+        List<Product> uniqueProducts = products.stream().distinct().collect(Collectors.toList());
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), uniqueProducts.size());
+        List<Product> pagedProducts = uniqueProducts.subList(start, end);
+        Page<Product> productPage = new PageImpl<>(pagedProducts, pageable, uniqueProducts.size());
+        return productPage.map(productMapper::toProductDto);
+    }
+
 
     public boolean productCodeExists(String code) {
         return productRepository.existsByCode(code);
