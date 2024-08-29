@@ -3,7 +3,6 @@ package com.haratres.ecommerce.controller;
 import com.haratres.ecommerce.dto.AddressDto;
 import com.haratres.ecommerce.dto.CreateAddressDto;
 import com.haratres.ecommerce.dto.UpdateAddressDto;
-import com.haratres.ecommerce.repository.AddressRepository;
 import com.haratres.ecommerce.service.AddressService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

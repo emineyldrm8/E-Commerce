@@ -1,15 +1,13 @@
 package com.haratres.ecommerce.service;
 
 import com.haratres.ecommerce.dto.*;
-import com.haratres.ecommerce.dto.CreateProductDto;
-import com.haratres.ecommerce.dto.PageRequestDto;
-import com.haratres.ecommerce.dto.ProductDto;
-import com.haratres.ecommerce.dto.UpdateProductDto;
 import com.haratres.ecommerce.exception.*;
 import com.haratres.ecommerce.mapper.PriceMapper;
 import com.haratres.ecommerce.mapper.ProductMapper;
+import com.haratres.ecommerce.mapper.StockMapper;
 import com.haratres.ecommerce.model.Price;
 import com.haratres.ecommerce.model.Product;
+import com.haratres.ecommerce.model.Stock;
 import com.haratres.ecommerce.repository.ProductRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +32,7 @@ public class ProductService {
     private final PriceMapper priceMapper = PriceMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
-    public ProductService(ProductRepository productRepository, StockService stockService) {
-    public ProductService(ProductRepository productRepository, PaginationService paginationService, PriceService priceService) {
+    public ProductService(ProductRepository productRepository, StockService stockService, PaginationService paginationService, PriceService priceService) {
         this.productRepository = productRepository;
         this.stockService = stockService;
         this.paginationService = paginationService;
@@ -45,6 +42,7 @@ public class ProductService {
     public List<ProductDto> getAllProducts() {
         return productMapper.toProductDtoList(productRepository.findAll());
     }
+
     public Page<ProductDto> getAllProducts(PageRequestDto dto) {
         List<String> validColumns = paginationService.getValidSortColumns(Product.class);
         if (!validColumns.contains(dto.getSortByColumn())) {
@@ -138,7 +136,7 @@ public class ProductService {
         }
     }
 
-    public  Page<ProductDto> searchProducts(PageRequestDto dto,String text) {
+    public Page<ProductDto> searchProducts(PageRequestDto dto, String text) {
         Pageable pageable = paginationService.getPageable(dto);
         String cleanedText = text.trim().toLowerCase();
         List<String> keywords = Arrays.asList(cleanedText.split("\\s+"));
@@ -153,7 +151,6 @@ public class ProductService {
         Page<Product> productPage = new PageImpl<>(pagedProducts, pageable, uniqueProducts.size());
         return productPage.map(productMapper::toProductDto);
     }
-
 
     public boolean productCodeExists(String code) {
         return productRepository.existsByCode(code);
@@ -182,6 +179,7 @@ public class ProductService {
             throw new NotSavedException("An error occurred while processing the stock for product ID: " + productId, e);
         }
     }
+
     public StockDto updateStock(Long productId, UpdateStockDto stock) {
         Product product = getProductById(productId);
         if (Objects.isNull(product.getStock())) {
@@ -189,12 +187,13 @@ public class ProductService {
         }
         Stock updatedStock = stockMapper.toStockFromUpdateStockDto(stock);
         updatedStock.setId(product.getStock().getId());
-        updatedStock.setProduct(product);;
+        updatedStock.setProduct(product);
         updatedStock = stockService.saveStock(updatedStock);
         product.setStock(updatedStock);
         productRepository.save(product);
         return stockMapper.toStockDto(updatedStock);
     }
+
     public void deleteStock(Long productId) {
         try {
             Product product = getProductById(productId);
@@ -204,7 +203,6 @@ public class ProductService {
             throw new NotDeletedException("Failed to delete stock with id: " + productId, e);
         }
     }
-
 
     public PriceDto createPriceForProduct(Long productId, CreatePriceDto priceDto) {
         try {
@@ -221,6 +219,7 @@ public class ProductService {
             throw new NotSavedException("An error occurred while processing the price for product ID: " + productId, e);
         }
     }
+
     public PriceDto updatePrice(Long productId, UpdatePriceDto price) {
         Product product = getProductById(productId);
         if (Objects.isNull(product.getPrice())) {
@@ -228,12 +227,13 @@ public class ProductService {
         }
         Price updatedPrice = priceMapper.toPriceFromUpdatePriceDto(price);
         updatedPrice.setId(product.getPrice().getId());
-        updatedPrice.setProduct(product);;
+        updatedPrice.setProduct(product);
         updatedPrice = priceService.savePrice(updatedPrice);
         product.setPrice(updatedPrice);
         productRepository.save(product);
         return priceMapper.toPriceDto(updatedPrice);
     }
+
     public void deletePrice(Long productId) {
         try {
             Product product = getProductById(productId);
@@ -243,5 +243,4 @@ public class ProductService {
             throw new NotDeletedException("Failed to delete price with id: " + productId, e);
         }
     }
-
 }

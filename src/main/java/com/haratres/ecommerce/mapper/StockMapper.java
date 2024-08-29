@@ -1,15 +1,11 @@
 package com.haratres.ecommerce.mapper;
 
-import com.haratres.ecommerce.dto.CreateStockDto;
 import com.haratres.ecommerce.dto.StockDto;
-import com.haratres.ecommerce.dto.ProductDto;
 import com.haratres.ecommerce.dto.UpdateStockDto;
 import com.haratres.ecommerce.model.Stock;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-
-import java.util.List;
 
 @Mapper
 public interface StockMapper {
@@ -19,20 +15,6 @@ public interface StockMapper {
     @Mapping(target = "productId", source = "product.id")
     StockDto toStockDto(Stock stock);
 
-    @Mapping(target = "product.id", source = "productId")
-    Stock toStock(StockDto stockDto);
-
-    UpdateStockDto toUpdateStockDto(Stock stock);
-
     @Mapping(target = "product", ignore = true)
     Stock toStockFromUpdateStockDto(UpdateStockDto stockDto);
-
-    CreateStockDto toCreateStockDto(Stock stock);
-
-    @Mapping(target = "product", ignore = true)
-    Stock toStockFromCreateStockDto(CreateStockDto stockDto);
-
-    List<StockDto> toStockDtoList(List<Stock> stocks);
-
-    List<Stock> toStockList(List<StockDto> stockDtos);
 }

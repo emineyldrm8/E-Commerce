@@ -3,7 +3,6 @@ package com.haratres.ecommerce.controller;
 import com.haratres.ecommerce.dto.CreatePriceDto;
 import com.haratres.ecommerce.dto.PriceDto;
 import com.haratres.ecommerce.dto.UpdatePriceDto;
-import com.haratres.ecommerce.model.Price;
 import com.haratres.ecommerce.service.PriceService;
 import com.haratres.ecommerce.service.ProductService;
 import org.springframework.http.HttpStatus;
@@ -11,14 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/products/{productId}/prices")
 public class ProductPriceController {
     private final PriceService priceService;
     private final ProductService productService;
-
 
     public ProductPriceController(PriceService priceService, ProductService productService) {
         this.priceService = priceService;
