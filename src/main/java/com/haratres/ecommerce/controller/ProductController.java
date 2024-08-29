@@ -28,11 +28,12 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<Page<ProductDto>> getAllProducts(
-            @RequestParam(name = "page") int pageNumber,
-            @RequestParam(name = "size") int pageSize,
-            @RequestParam(name = "sort") Sort.Direction sort,
-            @RequestParam(name = "sortBy") String sortByColumn){
-        PageRequestDto dto = new PageRequestDto(pageNumber,pageSize,sort,sortByColumn);
+            @RequestParam(name = "page", defaultValue = "0") int pageNumber,
+            @RequestParam(name = "size", defaultValue = "10") int pageSize,
+            @RequestParam(name = "sort", defaultValue = "ASC") String sortDirection,
+            @RequestParam(name = "sortBy", defaultValue = "id") String sortByColumn) {
+        Sort.Direction sort = Sort.Direction.fromString(sortDirection);
+        PageRequestDto dto = new PageRequestDto(pageNumber, pageSize, sort, sortByColumn);
         Page<ProductDto> productPage = productService.getAllProducts(dto);
         return ResponseEntity.ok(productPage);
     }

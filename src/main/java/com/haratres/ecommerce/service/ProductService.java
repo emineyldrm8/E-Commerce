@@ -26,16 +26,16 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
     @Autowired
-    private EntityManager entityManager;
+    private PaginationService paginationService;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
     public Page<ProductDto> getAllProducts(PageRequestDto dto) {
-        List<String> validColumns = getValidSortColumns();
+        List<String> validColumns = paginationService.getValidSortColumns(Product.class);
         if (!validColumns.contains(dto.getSortByColumn())) {
             logger.error("Invalid sort column: {}" ,dto.getSortByColumn());
             throw new NotFoundException("Invalid sort column: " + dto.getSortByColumn());
         }
-        Pageable pageable = dto.getPageable(dto);
+        Pageable pageable = paginationService.getPageable(dto);
         Page<Product> productPage = productRepository.findAll(pageable);
         return productPage.map(productMapper::toProductDto);
     }
@@ -133,13 +133,5 @@ public class ProductService {
                     logger.error("Product not found with id: {}", id);
                     return new NotFoundException("Product not found with id: " + id);
                 });
-    }
-
-    private List<String> getValidSortColumns() {
-        Metamodel metamodel = entityManager.getMetamodel();
-        EntityType<Product> entityType = metamodel.entity(Product.class);
-        return entityType.getAttributes().stream()
-                .map(attribute -> attribute.getName())
-                .collect(Collectors.toList());
     }
 }
