@@ -11,12 +11,8 @@ import com.haratres.ecommerce.mapper.ProductMapper;
 import com.haratres.ecommerce.model.Price;
 import com.haratres.ecommerce.model.Product;
 import com.haratres.ecommerce.repository.ProductRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.Metamodel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -29,22 +25,22 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
-    @Autowired
-    private ProductRepository productRepository;
-    @Autowired
-    private PaginationService paginationService;
     private final ProductRepository productRepository;
+    private final PaginationService paginationService;
     private final PriceService priceService;
     private final ProductMapper productMapper = ProductMapper.INSTANCE;
+    private final PriceMapper priceMapper = PriceMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
-    public ProductService(ProductRepository productRepository, PriceService priceService) {
+    public ProductService(ProductRepository productRepository, PaginationService paginationService, PriceService priceService) {
         this.productRepository = productRepository;
+        this.paginationService = paginationService;
         this.priceService = priceService;
     }
 
     public List<ProductDto> getAllProducts() {
         return productMapper.toProductDtoList(productRepository.findAll());
+    }
     public Page<ProductDto> getAllProducts(PageRequestDto dto) {
         List<String> validColumns = paginationService.getValidSortColumns(Product.class);
         if (!validColumns.contains(dto.getSortByColumn())) {
@@ -205,5 +201,4 @@ public class ProductService {
         }
     }
 
-}
 }
