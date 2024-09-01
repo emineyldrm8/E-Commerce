@@ -46,7 +46,7 @@ public class ProductService {
     public Page<ProductDto> getAllProducts(PageRequestDto dto) {
         List<String> validColumns = paginationService.getValidSortColumns(Product.class);
         if (!validColumns.contains(dto.getSortByColumn())) {
-            logger.error("Invalid sort column: {}" ,dto.getSortByColumn());
+            logger.error("Invalid sort column: {}", dto.getSortByColumn());
             throw new NotFoundException("Invalid sort column: " + dto.getSortByColumn());
         }
         Pageable pageable = paginationService.getPageable(dto);
@@ -167,18 +167,21 @@ public class ProductService {
     public StockDto createStockForProduct(Long productId, CreateStockDto stockDto) {
         try {
             Product product = getProductById(productId);
-            Stock existingStock = product.getStock();
-            if (Objects.equals(existingStock.getQuantity(), 0)) {
-                existingStock.setQuantity(stockDto.getQuantity());
-            } else {
+            if (Objects.nonNull(product.getStock())) {
                 throw new NotSavedException("This product already has stock. You cannot create another one.");
             }
-            Stock updatedStock = stockService.saveStock(existingStock);
-            return stockMapper.toStockDto(updatedStock);
+            Stock newStock = new Stock();
+            newStock.setQuantity(stockDto.getQuantity());
+            newStock.setProduct(product);
+            Stock savedStock = stockService.saveStock(newStock);
+            product.setStock(savedStock);
+            productRepository.save(product);
+            return stockMapper.toStockDto(savedStock);
         } catch (Exception e) {
             throw new NotSavedException("An error occurred while processing the stock for product ID: " + productId, e);
         }
     }
+
 
     public StockDto updateStock(Long productId, UpdateStockDto stock) {
         Product product = getProductById(productId);
@@ -209,18 +212,21 @@ public class ProductService {
     public PriceDto createPriceForProduct(Long productId, CreatePriceDto priceDto) {
         try {
             Product product = getProductById(productId);
-            Price existingPrice = product.getPrice();
-            if (Objects.equals(existingPrice.getValue(), 0)) {
-                existingPrice.setValue(priceDto.getValue());
-            } else {
-                throw new NotSavedException("This product already has price. You cannot create another one.");
+            if (Objects.nonNull(product.getPrice())) {
+                throw new NotSavedException("This product already has a price. You cannot create another one.");
             }
-            Price updatedPrice = priceService.savePrice(existingPrice);
-            return priceMapper.toPriceDto(updatedPrice);
+            Price newPrice = new Price();
+            newPrice.setValue(priceDto.getValue());
+            newPrice.setProduct(product);
+            Price savedPrice = priceService.savePrice(newPrice);
+            product.setPrice(savedPrice);
+            productRepository.save(product);
+            return priceMapper.toPriceDto(savedPrice);
         } catch (Exception e) {
             throw new NotSavedException("An error occurred while processing the price for product ID: " + productId, e);
         }
     }
+
 
     public PriceDto updatePrice(Long productId, UpdatePriceDto price) {
         Product product = getProductById(productId);
@@ -239,10 +245,11 @@ public class ProductService {
     public void deletePrice(Long productId) {
         try {
             Product product = getProductById(productId);
-                priceService.deletePrice(product.getPrice());
-                product.setPrice(null);
-                productRepository.save(product);
-        } catch (Exception e) {
+            priceService.deletePrice(product.getPrice());
+            product.setPrice(null);
+            productRepository.save(product);
+        } catch (
+                Exception e) {
             logger.error("Failed to delete price with id: {}", productId);
             throw new NotDeletedException("Failed to delete price with id: " + productId, e);
         }
