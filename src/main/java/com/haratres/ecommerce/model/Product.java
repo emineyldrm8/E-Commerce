@@ -30,9 +30,11 @@ public class Product extends BaseEntity {
     private String description;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "price_id")
     private Price price;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "stock_id")
     private Stock stock;
 
     @Column(name = "color", nullable = false)

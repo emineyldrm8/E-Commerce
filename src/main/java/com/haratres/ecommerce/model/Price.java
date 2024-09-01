@@ -19,8 +19,7 @@ public class Price {
     @Column(name = "value", nullable = false)
     private Double value;
 
-    @OneToOne(mappedBy="price")
+    @OneToOne(mappedBy = "price")
     @JsonIgnore
-    @JoinColumn(name = "product_id", referencedColumnName = "id")
     private Product product;
 }
