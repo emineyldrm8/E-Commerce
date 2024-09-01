@@ -198,6 +198,8 @@ public class ProductService {
         try {
             Product product = getProductById(productId);
             stockService.deleteStock(product.getStock());
+            product.setStock(null);
+            productRepository.save(product);
         } catch (Exception e) {
             logger.error("Failed to delete stock with id: {}", productId);
             throw new NotDeletedException("Failed to delete stock with id: " + productId, e);
@@ -237,7 +239,9 @@ public class ProductService {
     public void deletePrice(Long productId) {
         try {
             Product product = getProductById(productId);
-            priceService.deletePrice(product.getPrice());
+                priceService.deletePrice(product.getPrice());
+                product.setPrice(null);
+                productRepository.save(product);
         } catch (Exception e) {
             logger.error("Failed to delete price with id: {}", productId);
             throw new NotDeletedException("Failed to delete price with id: " + productId, e);
