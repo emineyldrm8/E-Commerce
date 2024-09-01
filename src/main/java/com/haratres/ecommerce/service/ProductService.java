@@ -175,7 +175,6 @@ public class ProductService {
             newStock.setProduct(product);
             Stock savedStock = stockService.saveStock(newStock);
             product.setStock(savedStock);
-            productRepository.save(product);
             return stockMapper.toStockDto(savedStock);
         } catch (Exception e) {
             throw new NotSavedException("An error occurred while processing the stock for product ID: " + productId, e);
@@ -193,7 +192,6 @@ public class ProductService {
         updatedStock.setProduct(product);
         updatedStock = stockService.saveStock(updatedStock);
         product.setStock(updatedStock);
-        productRepository.save(product);
         return stockMapper.toStockDto(updatedStock);
     }
 
@@ -202,7 +200,6 @@ public class ProductService {
             Product product = getProductById(productId);
             stockService.deleteStock(product.getStock());
             product.setStock(null);
-            productRepository.save(product);
         } catch (Exception e) {
             logger.error("Failed to delete stock with id: {}", productId);
             throw new NotDeletedException("Failed to delete stock with id: " + productId, e);
@@ -220,7 +217,6 @@ public class ProductService {
             newPrice.setProduct(product);
             Price savedPrice = priceService.savePrice(newPrice);
             product.setPrice(savedPrice);
-            productRepository.save(product);
             return priceMapper.toPriceDto(savedPrice);
         } catch (Exception e) {
             throw new NotSavedException("An error occurred while processing the price for product ID: " + productId, e);
@@ -238,7 +234,6 @@ public class ProductService {
         updatedPrice.setProduct(product);
         updatedPrice = priceService.savePrice(updatedPrice);
         product.setPrice(updatedPrice);
-        productRepository.save(product);
         return priceMapper.toPriceDto(updatedPrice);
     }
 
@@ -247,7 +242,6 @@ public class ProductService {
             Product product = getProductById(productId);
             priceService.deletePrice(product.getPrice());
             product.setPrice(null);
-            productRepository.save(product);
         } catch (
                 Exception e) {
             logger.error("Failed to delete price with id: {}", productId);
