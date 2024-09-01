@@ -4,6 +4,5 @@ import lombok.Data;
 
 @Data
 public class UpdateStockDto {
-    private Long id;
     private int quantity;
 }

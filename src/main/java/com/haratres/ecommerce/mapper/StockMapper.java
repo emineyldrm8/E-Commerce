@@ -16,5 +16,6 @@ public interface StockMapper {
     StockDto toStockDto(Stock stock);
 
     @Mapping(target = "product", ignore = true)
+    @Mapping(target = "id", ignore = true)
     Stock toStockFromUpdateStockDto(UpdateStockDto stockDto);
 }

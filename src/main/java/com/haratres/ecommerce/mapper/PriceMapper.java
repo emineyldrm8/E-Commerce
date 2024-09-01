@@ -22,5 +22,6 @@ public interface PriceMapper {
     Price toPrice(PriceDto priceDto);
 
     @Mapping(target = "product", ignore = true)
+    @Mapping(target = "id", ignore = true)
     Price toPriceFromUpdatePriceDto(UpdatePriceDto priceDto);
 }
