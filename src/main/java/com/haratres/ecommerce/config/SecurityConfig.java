@@ -1,5 +1,6 @@
 package com.haratres.ecommerce.config;
 
+
 import com.haratres.ecommerce.filter.JwtAuthenticationFilter;
 import com.haratres.ecommerce.service.UserDetailsImpl;
 import org.springframework.context.annotation.Bean;

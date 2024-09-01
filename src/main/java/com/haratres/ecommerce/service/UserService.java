@@ -55,6 +55,7 @@ public class UserService {
             logger.error("Error registering user: {}.", userRegisterDto.getUsername());
             throw new NotSavedException("Error registering user");
         }
+
     }
 
     public UserLoginDto getUserByUsername(String username) {
