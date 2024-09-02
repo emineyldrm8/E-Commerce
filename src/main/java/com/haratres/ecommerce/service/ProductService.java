@@ -1,6 +1,7 @@
 package com.haratres.ecommerce.service;
 
 import com.haratres.ecommerce.dto.*;
+import com.haratres.ecommerce.elasticRepository.ProductElasticSearchRepository;
 import com.haratres.ecommerce.exception.*;
 import com.haratres.ecommerce.mapper.PriceMapper;
 import com.haratres.ecommerce.mapper.ProductMapper;
@@ -14,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -31,27 +34,51 @@ public class ProductService {
     private final StockMapper stockMapper = StockMapper.INSTANCE;
     private final PriceMapper priceMapper = PriceMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
+    private final ProductElasticSearchRepository productElasticSearchRepository;
 
-    public ProductService(ProductRepository productRepository, StockService stockService, PaginationService paginationService, PriceService priceService) {
+    public ProductService(ProductRepository productRepository, StockService stockService, PaginationService paginationService, PriceService priceService, ProductElasticSearchRepository productElasticSearchRepository) {
         this.productRepository = productRepository;
         this.stockService = stockService;
         this.paginationService = paginationService;
         this.priceService = priceService;
+        this.productElasticSearchRepository = productElasticSearchRepository;
     }
 
     public List<ProductDto> getAllProducts() {
         return productMapper.toProductDtoList(productRepository.findAll());
     }
 
-    public Page<ProductDto> getAllProducts(PageRequestDto dto) {
+    public Page<ProductDto> getAllProductsFromDb(PageRequestDto dto) {
         List<String> validColumns = paginationService.getValidSortColumns(Product.class);
         if (!validColumns.contains(dto.getSortByColumn())) {
-            logger.error("Invalid sort column: {}", dto.getSortByColumn());
+            logger.error("Invalid sort column: {}" ,dto.getSortByColumn());
             throw new NotFoundException("Invalid sort column: " + dto.getSortByColumn());
         }
         Pageable pageable = paginationService.getPageable(dto);
         Page<Product> productPage = productRepository.findAll(pageable);
         return productPage.map(productMapper::toProductDto);
+    }
+
+    public Page<ProductDto> getAllProducts(PageRequestDto dto) {
+        List<String> validColumns = paginationService.getValidSortColumns(Product.class);
+        if (!validColumns.contains(dto.getSortByColumn())) {
+            throw new NotFoundException("Invalid sort column: " + dto.getSortByColumn());
+        }
+
+        Pageable pageable = paginationService.getPageable(dto);
+        Page<ProductDto> productPage = productElasticSearchRepository.findAll(pageable);
+        return productPage;
+    }
+
+    // Ürünleri 5 dakikada bir indeksleme
+    @Scheduled(cron = "0 44 * * * *")
+    public void indexProducts() {
+//        Page<ProductDto> products = getAllProductsFromDb(new PageRequestDto(10,10, Sort.Direction.DESC,"id"));
+        List<Product> product = productRepository.findAll();
+        System.out.println("çalısıyon mu lan");
+        List<ProductDto> products = productMapper.toProductDtoList(product);
+
+        productElasticSearchRepository.saveAll(products);
     }
 
     public ProductDto save(CreateProductDto createProductDto) {
@@ -136,21 +163,35 @@ public class ProductService {
         }
     }
 
+
     public Page<ProductDto> searchProducts(PageRequestDto dto, String text) {
         Pageable pageable = paginationService.getPageable(dto);
         String cleanedText = text.trim().toLowerCase();
         List<String> keywords = Arrays.asList(cleanedText.split("\\s+"));
-        List<Product> products = productRepository.findByCodeIgnoreCaseOrNameIgnoreCase(cleanedText, cleanedText);
+
+        // İlk olarak, kod veya ad ile eşleşen ürünleri bul
+        List<ProductDto> products = productElasticSearchRepository.findByCodeIgnoreCaseOrNameIgnoreCase(cleanedText, cleanedText);
+
+        // Her anahtar kelime için arama yap
         for (String keyword : keywords) {
-            products.addAll(productRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(keyword, keyword));
+            products.addAll(productElasticSearchRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(keyword, keyword));
         }
-        List<Product> uniqueProducts = products.stream().distinct().collect(Collectors.toList());
+
+        // Tekil ürünleri filtrele
+        List<ProductDto> uniqueProducts = products.stream().distinct().collect(Collectors.toList());
+
+        // Sayfalama işlemi
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), uniqueProducts.size());
-        List<Product> pagedProducts = uniqueProducts.subList(start, end);
-        Page<Product> productPage = new PageImpl<>(pagedProducts, pageable, uniqueProducts.size());
-        return productPage.map(productMapper::toProductDto);
+        List<ProductDto> pagedProducts = uniqueProducts.subList(start, end);
+
+        // Sayfayı oluştur
+        Page<ProductDto> productPage = new PageImpl<>(pagedProducts, pageable, uniqueProducts.size());
+
+        // DTO'ya dönüştür
+        return productPage;
     }
+
 
     public boolean productCodeExists(String code) {
         return productRepository.existsByCode(code);
@@ -167,21 +208,18 @@ public class ProductService {
     public StockDto createStockForProduct(Long productId, CreateStockDto stockDto) {
         try {
             Product product = getProductById(productId);
-            if (Objects.nonNull(product.getStock())) {
+            Stock existingStock = product.getStock();
+            if (Objects.equals(existingStock.getQuantity(), 0)) {
+                existingStock.setQuantity(stockDto.getQuantity());
+            } else {
                 throw new NotSavedException("This product already has stock. You cannot create another one.");
             }
-            Stock newStock = new Stock();
-            newStock.setQuantity(stockDto.getQuantity());
-            newStock.setProduct(product);
-            Stock savedStock = stockService.saveStock(newStock);
-            product.setStock(savedStock);
-            productRepository.save(product);
-            return stockMapper.toStockDto(savedStock);
+            Stock updatedStock = stockService.saveStock(existingStock);
+            return stockMapper.toStockDto(updatedStock);
         } catch (Exception e) {
             throw new NotSavedException("An error occurred while processing the stock for product ID: " + productId, e);
         }
     }
-
 
     public StockDto updateStock(Long productId, UpdateStockDto stock) {
         Product product = getProductById(productId);
@@ -201,8 +239,6 @@ public class ProductService {
         try {
             Product product = getProductById(productId);
             stockService.deleteStock(product.getStock());
-            product.setStock(null);
-            productRepository.save(product);
         } catch (Exception e) {
             logger.error("Failed to delete stock with id: {}", productId);
             throw new NotDeletedException("Failed to delete stock with id: " + productId, e);
@@ -212,21 +248,18 @@ public class ProductService {
     public PriceDto createPriceForProduct(Long productId, CreatePriceDto priceDto) {
         try {
             Product product = getProductById(productId);
-            if (Objects.nonNull(product.getPrice())) {
-                throw new NotSavedException("This product already has a price. You cannot create another one.");
+            Price existingPrice = product.getPrice();
+            if (Objects.equals(existingPrice.getValue(), 0)) {
+                existingPrice.setValue(priceDto.getValue());
+            } else {
+                throw new NotSavedException("This product already has price. You cannot create another one.");
             }
-            Price newPrice = new Price();
-            newPrice.setValue(priceDto.getValue());
-            newPrice.setProduct(product);
-            Price savedPrice = priceService.savePrice(newPrice);
-            product.setPrice(savedPrice);
-            productRepository.save(product);
-            return priceMapper.toPriceDto(savedPrice);
+            Price updatedPrice = priceService.savePrice(existingPrice);
+            return priceMapper.toPriceDto(updatedPrice);
         } catch (Exception e) {
             throw new NotSavedException("An error occurred while processing the price for product ID: " + productId, e);
         }
     }
-
 
     public PriceDto updatePrice(Long productId, UpdatePriceDto price) {
         Product product = getProductById(productId);
@@ -246,10 +279,7 @@ public class ProductService {
         try {
             Product product = getProductById(productId);
             priceService.deletePrice(product.getPrice());
-            product.setPrice(null);
-            productRepository.save(product);
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             logger.error("Failed to delete price with id: {}", productId);
             throw new NotDeletedException("Failed to delete price with id: " + productId, e);
         }
