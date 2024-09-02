@@ -18,7 +18,6 @@ public interface ProductElasticSearchRepository extends ElasticsearchRepository<
 
       Page<ProductDto> findAll(Pageable pageable);
 
-      // Add fuzzy search method
       @Query("{\"bool\": {\"should\": [{\"fuzzy\": {\"name\": \"?0\"}}, {\"fuzzy\": {\"code\": \"?0\"}}]}}")
       List<ProductDto> findByNameOrCodeFuzzy(String text);
 }
