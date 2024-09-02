@@ -177,6 +177,9 @@ public class ProductService {
             products.addAll(productElasticSearchRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(keyword, keyword));
         }
 
+        // Fuzzy search
+        products.addAll(productElasticSearchRepository.findByNameOrCodeFuzzy(cleanedText));
+
         // Tekil ürünleri filtrele
         List<ProductDto> uniqueProducts = products.stream().distinct().collect(Collectors.toList());
 
