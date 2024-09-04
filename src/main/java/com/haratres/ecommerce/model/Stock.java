@@ -6,20 +6,20 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Price")
+@Table(name = "Stock")
 @Getter
 @Setter
-public class Price {
+public class Stock {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "value", nullable = false)
-    private Double value;
+    @Column(name = "quantity", nullable = false)
+    private int quantity;
 
-    @OneToOne(mappedBy = "price")
+    @OneToOne(mappedBy = "stock")
     @JsonIgnore
     private Product product;
 }

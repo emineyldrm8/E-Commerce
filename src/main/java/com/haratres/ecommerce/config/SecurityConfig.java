@@ -1,5 +1,6 @@
 package com.haratres.ecommerce.config;
 
+
 import com.haratres.ecommerce.filter.JwtAuthenticationFilter;
 import com.haratres.ecommerce.service.UserDetailsImpl;
 import org.springframework.context.annotation.Bean;
@@ -31,12 +32,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http  //cart için bir şey ekleme //addres için de
+        return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/*").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/products/{productId}/prices").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/products/{productId}/stocks").permitAll()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsImpl)

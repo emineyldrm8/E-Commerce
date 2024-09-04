@@ -9,7 +9,8 @@ public class ProductDto {
     private String name;
     private String title;
     private String description;
-    private PriceDto price;
+    private int stock;
+    private double price;
     private String color;
     private String size;
 }
