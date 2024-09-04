@@ -55,7 +55,7 @@ public class ProductService {
         return productPage;
     }
 
-    @Scheduled(cron = "0 44 * * * *")
+    @Scheduled(cron = "0 16 * * * *")
     public void indexProducts() {
         List<Product> product = productRepository.findAll();
         List<ProductDto> products = productMapper.toProductDtoList(product);
