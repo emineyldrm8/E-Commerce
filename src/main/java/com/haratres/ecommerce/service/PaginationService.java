@@ -35,5 +35,4 @@ public class PaginationService {
                 .map(attribute -> attribute.getName())
                 .collect(Collectors.toList());
     }
-
 }

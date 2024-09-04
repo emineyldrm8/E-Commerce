@@ -1,6 +1,7 @@
 package com.haratres.ecommerce.service;
 
 import com.haratres.ecommerce.dto.*;
+import com.haratres.ecommerce.elasticRepository.ProductElasticSearchRepository;
 import com.haratres.ecommerce.exception.*;
 import com.haratres.ecommerce.mapper.PriceMapper;
 import com.haratres.ecommerce.mapper.ProductMapper;
@@ -14,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -31,27 +34,32 @@ public class ProductService {
     private final StockMapper stockMapper = StockMapper.INSTANCE;
     private final PriceMapper priceMapper = PriceMapper.INSTANCE;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
+    private final ProductElasticSearchRepository productElasticSearchRepository;
 
-    public ProductService(ProductRepository productRepository, StockService stockService, PaginationService paginationService, PriceService priceService) {
+    public ProductService(ProductRepository productRepository, StockService stockService, PaginationService paginationService, PriceService priceService, ProductElasticSearchRepository productElasticSearchRepository) {
         this.productRepository = productRepository;
         this.stockService = stockService;
         this.paginationService = paginationService;
         this.priceService = priceService;
-    }
-
-    public List<ProductDto> getAllProducts() {
-        return productMapper.toProductDtoList(productRepository.findAll());
+        this.productElasticSearchRepository = productElasticSearchRepository;
     }
 
     public Page<ProductDto> getAllProducts(PageRequestDto dto) {
         List<String> validColumns = paginationService.getValidSortColumns(Product.class);
         if (!validColumns.contains(dto.getSortByColumn())) {
-            logger.error("Invalid sort column: {}", dto.getSortByColumn());
             throw new NotFoundException("Invalid sort column: " + dto.getSortByColumn());
         }
+
         Pageable pageable = paginationService.getPageable(dto);
-        Page<Product> productPage = productRepository.findAll(pageable);
-        return productPage.map(productMapper::toProductDto);
+        Page<ProductDto> productPage = productElasticSearchRepository.findAll(pageable);
+        return productPage;
+    }
+
+    @Scheduled(cron = "0 16 * * * *")
+    public void indexProducts() {
+        List<Product> product = productRepository.findAll();
+        List<ProductDto> products = productMapper.toProductDtoList(product);
+        productElasticSearchRepository.saveAll(products);
     }
 
     public ProductDto save(CreateProductDto createProductDto) {
@@ -136,20 +144,22 @@ public class ProductService {
         }
     }
 
+
     public Page<ProductDto> searchProducts(PageRequestDto dto, String text) {
         Pageable pageable = paginationService.getPageable(dto);
         String cleanedText = text.trim().toLowerCase();
         List<String> keywords = Arrays.asList(cleanedText.split("\\s+"));
-        List<Product> products = productRepository.findByCodeIgnoreCaseOrNameIgnoreCase(cleanedText, cleanedText);
+        List<ProductDto> products = productElasticSearchRepository.findByCodeIgnoreCaseOrNameIgnoreCase(cleanedText, cleanedText);
         for (String keyword : keywords) {
-            products.addAll(productRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(keyword, keyword));
+            products.addAll(productElasticSearchRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(keyword, keyword));
         }
-        List<Product> uniqueProducts = products.stream().distinct().collect(Collectors.toList());
+        products.addAll(productElasticSearchRepository.findByNameOrCodeFuzzy(cleanedText));
+        List<ProductDto> uniqueProducts = products.stream().distinct().collect(Collectors.toList());
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), uniqueProducts.size());
-        List<Product> pagedProducts = uniqueProducts.subList(start, end);
-        Page<Product> productPage = new PageImpl<>(pagedProducts, pageable, uniqueProducts.size());
-        return productPage.map(productMapper::toProductDto);
+        List<ProductDto> pagedProducts = uniqueProducts.subList(start, end);
+        Page<ProductDto> productPage = new PageImpl<>(pagedProducts, pageable, uniqueProducts.size());
+        return productPage;
     }
 
     public boolean productCodeExists(String code) {
@@ -248,8 +258,7 @@ public class ProductService {
             priceService.deletePrice(product.getPrice());
             product.setPrice(null);
             productRepository.save(product);
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             logger.error("Failed to delete price with id: {}", productId);
             throw new NotDeletedException("Failed to delete price with id: " + productId, e);
         }

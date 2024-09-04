@@ -1,8 +1,10 @@
 package com.haratres.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.elasticsearch.annotations.Document;
 
 @Entity
 @Table(name = "Product", uniqueConstraints = {
@@ -10,6 +12,7 @@ import lombok.Setter;
 })
 @Getter
 @Setter
+@Document(indexName = "products")
 public class Product extends BaseEntity {
 
     @Id
@@ -31,10 +34,12 @@ public class Product extends BaseEntity {
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "price_id")
+    @JsonManagedReference
     private Price price;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "stock_id")
+    @JsonManagedReference
     private Stock stock;
 
     @Column(name = "color", nullable = false)
